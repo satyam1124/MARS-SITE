@@ -3,3046 +3,440 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOB Guard - Man Overboard Security System</title>
+    <title>MOB Guard — Man Overboard Security System | Maritime Safety Platform</title>
+    <meta name="description" content="MOB Guard is an advanced Man Overboard detection and crew monitoring system for maritime vessels. Real-time GPS tracking, biometric monitoring, and instant alerts.">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --bg-primary: #0a0e1a;
-            --bg-secondary: #111827;
-            --bg-card: #1a1f2e;
-            --bg-input: #243447;
-            --accent-cyan: #06b6d4;
-            --accent-blue: #3b82f6;
-            --accent-red: #ef4444;
-            --accent-orange: #f97316;
-            --accent-green: #10b981;
-            --accent-yellow: #f59e0b;
-            --text-primary: #ffffff;
-            --text-secondary: #9ca3af;
-            --border-color: #2d3748;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--bg-primary);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 4px;
-        }
-
-        /* Login Page */
-        .login-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, #0f172a 100%);
-        }
-
-        .login-box {
-            width: 100%;
-            max-width: 400px;
-            padding: 40px 30px;
-            text-align: center;
-        }
-
-        .logo {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 36px;
-            color: white;
-            box-shadow: 0 10px 40px rgba(6, 182, 212, 0.3);
-        }
-
-        .login-box h1 {
-            font-size: 28px;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .login-box p {
-            color: var(--text-secondary);
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
-
-        .input-wrapper {
-            position: relative;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            transition: all 0.3s;
-        }
-
-        .input-wrapper:focus-within {
-            border-color: var(--accent-cyan);
-            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
-        }
-
-        .input-wrapper i {
-            color: var(--text-secondary);
-            margin-right: 12px;
-            font-size: 16px;
-        }
-
-        .input-wrapper input {
-            width: 100%;
-            padding: 14px 0;
-            background: transparent;
-            border: none;
-            color: var(--text-primary);
-            font-size: 15px;
-            outline: none;
-        }
-
-        .input-wrapper input::placeholder {
-            color: #4b5563;
-        }
-
-        .toggle-password {
-            cursor: pointer;
-            color: var(--text-secondary);
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .demo-credentials {
-            margin-top: 25px;
-            padding: 20px;
-            background: var(--bg-card);
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-
-        .demo-credentials h3 {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-            font-weight: 500;
-        }
-
-        .credentials-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            font-size: 13px;
-        }
-
-        .credential-item {
-            text-align: left;
-        }
-
-        .credential-item span {
-            color: var(--text-secondary);
-        }
-
-        .credential-item strong {
-            color: var(--accent-cyan);
-            font-weight: 500;
-        }
-
-        /* Main App */
-        .app-container {
-            display: none;
-            min-height: 100vh;
-        }
-
-        .app-container.active {
-            display: block;
-        }
-
-        /* Header */
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            z-index: 1000;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .menu-btn {
-            width: 40px;
-            height: 40px;
-            background: var(--bg-card);
-            border: none;
-            border-radius: 10px;
-            color: var(--text-primary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-
-        .page-title h2 {
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .page-title p {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .live-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--accent-green);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        /* Emergency Alert Banner */
-        .emergency-banner {
-            position: fixed;
-            top: 60px;
-            left: 0;
-            right: 0;
-            background: linear-gradient(90deg, var(--accent-red), var(--accent-orange));
-            padding: 15px 20px;
-            z-index: 999;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            animation: slideDown 0.5s ease;
-        }
-
-        @keyframes slideDown {
-            from { transform: translateY(-100%); }
-            to { transform: translateY(0); }
-        }
-
-        .emergency-content {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .emergency-icon {
-            width: 40px;
-            height: 40px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        .emergency-text h3 {
-            font-size: 16px;
-            margin-bottom: 2px;
-        }
-
-        .emergency-text p {
-            font-size: 13px;
-            opacity: 0.9;
-        }
-
-        .emergency-time {
-            text-align: right;
-        }
-
-        .emergency-time .time {
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .emergency-time .ampm {
-            font-size: 12px;
-            opacity: 0.8;
-        }
-
-        .close-emergency {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-left: 15px;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: -300px;
-            width: 300px;
-            height: 100vh;
-            background: var(--bg-secondary);
-            z-index: 1001;
-            transition: left 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--border-color);
-        }
-
-        .sidebar.open {
-            left: 0;
-        }
-
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-        }
-
-        .sidebar-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .sidebar-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .sidebar-logo .logo-small {
-            width: 45px;
-            height: 45px;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-
-        .sidebar-logo div h3 {
-            font-size: 16px;
-            margin-bottom: 2px;
-        }
-
-        .sidebar-logo div p {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .close-sidebar {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 20px;
-            cursor: pointer;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .close-sidebar:hover {
-            background: var(--bg-card);
-        }
-
-        .sidebar-nav {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-        }
-
-        .nav-section {
-            margin-bottom: 20px;
-        }
-
-        .nav-section-title {
-            font-size: 11px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-            padding-left: 12px;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 4px;
-            color: var(--text-secondary);
-        }
-
-        .nav-item:hover {
-            background: var(--bg-card);
-            color: var(--text-primary);
-        }
-
-        .nav-item.active {
-            background: linear-gradient(90deg, rgba(6, 182, 212, 0.1), transparent);
-            color: var(--accent-cyan);
-            border-left: 3px solid var(--accent-cyan);
-        }
-
-        .nav-item i {
-            font-size: 18px;
-            width: 24px;
-            text-align: center;
-        }
-
-        .nav-item span {
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .sidebar-footer {
-            padding: 20px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: var(--bg-card);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-
-        .user-info div h4 {
-            font-size: 14px;
-            margin-bottom: 2px;
-        }
-
-        .user-info div p {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .logout-btn {
-            width: 100%;
-            padding: 12px;
-            background: transparent;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .logout-btn:hover {
-            background: var(--bg-card);
-            color: var(--text-primary);
-        }
-
-        /* Main Content */
-        .main-content {
-            padding: 80px 20px 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .main-content.with-emergency {
-            padding-top: 160px;
-        }
-
-        /* Stats Grid - Responsive */
-        .stats-grid {
-            display: grid;
-            gap: 15px;
-            margin-bottom: 20px;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        }
-
-        @media (min-width: 768px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .stats-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: transform 0.2s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .stat-info h3 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .stat-info p {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .stat-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-        }
-
-        .stat-icon.blue {
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-        }
-
-        .stat-icon.red {
-            background: linear-gradient(135deg, var(--accent-red), #dc2626);
-        }
-
-        .stat-icon.gray {
-            background: linear-gradient(135deg, #6b7280, #4b5563);
-        }
-
-        .stat-icon.cyan {
-            background: linear-gradient(135deg, #0891b2, var(--accent-cyan));
-        }
-
-        /* Section Headers */
-        .section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            margin-top: 25px;
-        }
-
-        .section-header h3 {
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .section-header h3 i {
-            color: var(--accent-cyan);
-        }
-
-        .btn-small {
-            padding: 8px 16px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-small:hover {
-            background: var(--border-color);
-        }
-
-        /* Tables */
-        .data-table {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            overflow: hidden;
-            overflow-x: auto;
-        }
-
-        .table-header {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr 1fr 1fr 1fr;
-            padding: 15px;
-            background: var(--bg-secondary);
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid var(--border-color);
-            min-width: 600px;
-        }
-
-        .table-row {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr 1fr 1fr 1fr;
-            padding: 15px;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 13px;
-            align-items: center;
-            min-width: 600px;
-        }
-
-        .table-row:last-child {
-            border-bottom: none;
-        }
-
-        .device-name {
-            font-weight: 600;
-        }
-
-        .device-name span {
-            display: block;
-            font-size: 12px;
-            color: var(--text-secondary);
-            font-weight: 400;
-            margin-top: 2px;
-        }
-
-        .position {
-            font-family: monospace;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .signal-bars {
-            display: flex;
-            gap: 3px;
-            align-items: flex-end;
-            height: 20px;
-        }
-
-        .signal-bar {
-            width: 4px;
-            background: var(--border-color);
-            border-radius: 2px;
-        }
-
-        .signal-bar.active {
-            background: var(--accent-green);
-        }
-
-        .signal-bar.warning {
-            background: var(--accent-orange);
-        }
-
-        .signal-bar.danger {
-            background: var(--accent-red);
-        }
-
-        .signal-bar:nth-child(1) { height: 30%; }
-        .signal-bar:nth-child(2) { height: 50%; }
-        .signal-bar:nth-child(3) { height: 70%; }
-        .signal-bar:nth-child(4) { height: 90%; }
-
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            display: inline-block;
-        }
-
-        .status-badge.online {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--accent-green);
-        }
-
-        .status-badge.offline {
-            background: rgba(107, 114, 128, 0.2);
-            color: #6b7280;
-        }
-
-        .status-badge.alert {
-            background: rgba(249, 115, 22, 0.2);
-            color: var(--accent-orange);
-        }
-
-        .status-badge.critical {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--accent-red);
-        }
-
-        .status-badge.safe {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--accent-green);
-        }
-
-        /* Alert Cards */
-        .alert-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .alert-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border-left: 4px solid var(--accent-red);
-        }
-
-        .alert-card.warning {
-            border-left-color: var(--accent-orange);
-        }
-
-        .alert-card.info {
-            border-left-color: #f59e0b;
-        }
-
-        .alert-icon {
-            width: 45px;
-            height: 45px;
-            background: rgba(239, 68, 68, 0.1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: var(--accent-red);
-            flex-shrink: 0;
-        }
-
-        .alert-card.warning .alert-icon {
-            background: rgba(249, 115, 22, 0.1);
-            color: var(--accent-orange);
-        }
-
-        .alert-card.info .alert-icon {
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
-        }
-
-        .alert-content {
-            flex: 1;
-        }
-
-        .alert-content h4 {
-            font-size: 14px;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .alert-badge {
-            font-size: 10px;
-            padding: 3px 8px;
-            border-radius: 4px;
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--accent-red);
-            text-transform: uppercase;
-        }
-
-        .alert-badge.warning {
-            background: rgba(249, 115, 22, 0.2);
-            color: var(--accent-orange);
-        }
-
-        .alert-badge.info {
-            background: rgba(245, 158, 11, 0.2);
-            color: #f59e0b;
-        }
-
-        .alert-content p {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-        }
-
-        .alert-meta {
-            display: flex;
-            gap: 15px;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .alert-meta span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .btn-resolve {
-            padding: 8px 16px;
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid var(--accent-green);
-            border-radius: 8px;
-            color: var(--accent-green);
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-            flex-shrink: 0;
-        }
-
-        .btn-resolve:hover {
-            background: var(--accent-green);
-            color: white;
-        }
-
-        /* Map Container - COLORFUL STYLES */
-        .map-container {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            overflow: hidden;
-            height: 400px;
-            position: relative;
-        }
-
-        #map {
-            height: 100%;
-            width: 100%;
-            background: #e5e7eb; /* Light gray while loading */
-        }
-
-        /* Map Switcher Control */
-        .map-controls {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            z-index: 1000;
-            display: flex;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 8px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-
-        .map-btn {
-            padding: 8px 16px;
-            border: 2px solid transparent;
-            border-radius: 6px;
-            background: white;
-            color: #374151;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .map-btn:hover {
-            background: #f3f4f6;
-            border-color: #d1d5db;
-        }
-
-        .map-btn.active {
-            background: #3b82f6;
-            color: white;
-            border-color: #2563eb;
-        }
-
-        .map-filters {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            display: flex;
-            gap: 10px;
-            z-index: 400;
-        }
-
-        .filter-dropdown {
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 10px 15px;
-            color: #374151;
-            font-size: 13px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .map-stats {
-            position: absolute;
-            top: 65px;
-            left: 15px;
-            display: flex;
-            gap: 8px;
-            z-index: 400;
-            flex-wrap: wrap;
-        }
-
-        .map-stat {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .map-stat.safe {
-            background: rgba(16, 185, 129, 0.9);
-            color: white;
-        }
-
-        .map-stat.warning {
-            background: rgba(245, 158, 11, 0.9);
-            color: white;
-        }
-
-        .map-stat.alert {
-            background: rgba(239, 68, 68, 0.9);
-            color: white;
-        }
-
-        .map-stat.mob {
-            background: linear-gradient(90deg, #dc2626, #f97316);
-            color: white;
-            animation: pulse 2s infinite;
-        }
-
-        /* Leaflet Popup Customization for colorful map */
-        .leaflet-popup-content-wrapper {
-            border-radius: 12px;
-            padding: 0;
-            overflow: hidden;
-        }
-
-        .leaflet-popup-content {
-            margin: 0;
-            padding: 15px;
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            color: #1f2937;
-        }
-
-        .leaflet-container a.leaflet-popup-close-button {
-            color: #6b7280;
-            padding: 8px 8px 0 0;
-        }
-
-        /* Device Cards */
-        .device-grid {
-            display: grid;
-            gap: 15px;
-        }
-
-        @media (min-width: 768px) {
-            .device-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        .device-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
-        }
-
-        .device-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .device-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .device-icon {
-            width: 50px;
-            height: 50px;
-            background: rgba(6, 182, 212, 0.1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: var(--accent-cyan);
-        }
-
-        .device-title.offline .device-icon {
-            background: rgba(107, 114, 128, 0.1);
-            color: #6b7280;
-        }
-
-        .device-title div h4 {
-            font-size: 18px;
-            margin-bottom: 2px;
-        }
-
-        .device-title div p {
-            font-size: 14px;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .device-status {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .device-toggle {
-            width: 50px;
-            height: 26px;
-            background: var(--accent-cyan);
-            border-radius: 13px;
-            position: relative;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .device-toggle::after {
-            content: '';
-            position: absolute;
-            width: 22px;
-            height: 22px;
-            background: white;
-            border-radius: 50%;
-            top: 2px;
-            right: 2px;
-            transition: transform 0.2s;
-        }
-
-        .device-toggle.off {
-            background: var(--border-color);
-        }
-
-        .device-toggle.off::after {
-            transform: translateX(-24px);
-        }
-
-        .device-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .device-actions button {
-            width: 36px;
-            height: 36px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .device-actions button:hover {
-            color: var(--text-primary);
-        }
-
-        .signal-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .device-details {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .detail-item {
-            text-align: center;
-        }
-
-        .detail-item label {
-            display: block;
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
-
-        .detail-item value {
-            font-size: 14px;
-            font-weight: 500;
-            font-family: monospace;
-        }
-
-        /* User Management - ENHANCED */
-        .user-grid {
-            display: grid;
-            gap: 15px;
-        }
-
-        @media (min-width: 768px) {
-            .user-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        .user-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: all 0.2s;
-        }
-
-        .user-card:hover {
-            border-color: var(--accent-cyan);
-        }
-
-        .user-info-card {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex: 1;
-        }
-
-        .user-avatar-large {
-            width: 50px;
-            height: 50px;
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-        }
-
-        .user-info-card div h4 {
-            font-size: 16px;
-            margin-bottom: 4px;
-        }
-
-        .user-info-card div p {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .role-badge {
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .role-badge.admin {
-            background: rgba(6, 182, 212, 0.2);
-            color: var(--accent-cyan);
-        }
-
-        .role-badge.viewer {
-            background: rgba(107, 114, 128, 0.2);
-            color: #9ca3af;
-        }
-
-        .user-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .user-actions button {
-            width: 36px;
-            height: 36px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-
-        .user-actions button:hover {
-            background: var(--accent-cyan);
-            color: white;
-            border-color: var(--accent-cyan);
-        }
-
-        .user-actions button.delete:hover {
-            background: var(--accent-red);
-            border-color: var(--accent-red);
-        }
-
-        /* Settings Page - Enhanced */
-        .settings-grid {
-            display: grid;
-            gap: 20px;
-        }
-
-        @media (min-width: 768px) {
-            .settings-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        .settings-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 24px;
-        }
-
-        .settings-card.full-width {
-            grid-column: 1 / -1;
-        }
-
-        .settings-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .settings-header i {
-            font-size: 24px;
-            color: var(--accent-cyan);
-        }
-
-        .settings-header h3 {
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .settings-header p {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-top: 2px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 14px;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 12px 16px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            color: var(--text-primary);
-            font-size: 15px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            border-color: var(--accent-cyan);
-        }
-
-        .form-group small {
-            display: block;
-            margin-top: 6px;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .toggle-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .toggle-row:last-child {
-            border-bottom: none;
-        }
-
-        .toggle-info h4 {
-            font-size: 15px;
-            margin-bottom: 4px;
-        }
-
-        .toggle-info p {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .save-btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 20px;
-        }
-
-        .save-btn:hover {
-            opacity: 0.9;
-        }
-
-        /* History Page */
-        .filters-panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .filters-panel h3 {
-            font-size: 14px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .filter-row {
-            display: grid;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        @media (min-width: 768px) {
-            .filter-row {
-                grid-template-columns: 2fr 1fr 1fr;
-            }
-        }
-
-        .filter-input {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 12px 15px;
-            color: var(--text-primary);
-            font-size: 14px;
-            width: 100%;
-        }
-
-        .export-btn {
-            width: 100%;
-            padding: 12px;
-            background: var(--accent-green);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        @media (min-width: 768px) {
-            .export-btn {
-                width: auto;
-            }
-        }
-
-        /* Page Sections */
-        .page-section {
-            display: none;
-        }
-
-        .page-section.active {
-            display: block;
-        }
-
-        /* Desktop Layout Improvements */
-        @media (min-width: 1024px) {
-            .main-content {
-                padding: 80px 40px 40px;
-            }
-            
-            .header {
-                padding: 0 40px;
-            }
-        }
-
-        /* Loading Animation */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Toast Notification */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            padding: 15px 25px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 2000;
-            opacity: 0;
-            transition: all 0.3s;
-        }
-
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-
-        .toast.success {
-            border-color: var(--accent-green);
-        }
-
-        .toast.error {
-            border-color: var(--accent-red);
-        }
-
-        /* Modal - ENHANCED */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 30px;
-            width: 90%;
-            max-width: 500px;
-            transform: scale(0.9);
-            transition: transform 0.3s;
-        }
-
-        .modal-overlay.active .modal {
-            transform: scale(1);
-        }
-
-        .modal h3 {
-            font-size: 20px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .modal-actions button {
-            flex: 1;
-            padding: 12px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .btn-cancel {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-        }
-
-        .btn-confirm {
-            background: var(--accent-red);
-            color: white;
-        }
-
-        .btn-save {
-            background: var(--accent-cyan);
-            color: white;
-        }
-
-        /* Custom Select Dropdown */
-        .custom-select {
-            position: relative;
-        }
-
-        .select-options {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            margin-top: 5px;
-            z-index: 100;
-            display: none;
-            overflow: hidden;
-        }
-
-        .custom-select.active .select-options {
-            display: block;
-        }
-
-        .select-option {
-            padding: 12px 16px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .select-option:hover {
-            background: var(--bg-secondary);
-        }
-
-        .select-option.selected {
-            color: var(--accent-cyan);
-        }
-
-        .select-option.selected::after {
-            content: '✓';
-            float: right;
-        }
-    </style>
-<base target="_blank">
+    <link rel="stylesheet" href="styles/landing.css">
 </head>
 <body>
-    <!-- Login Page -->
-    <div class="login-container" id="loginPage">
-        <div class="login-box">
-            <div class="logo">
-                <i class="fas fa-broadcast-tower"></i>
-            </div>
-            <h1>MOB Guard</h1>
-            <p>Man Overboard Security System</p>
-            
-            <form id="loginForm">
-                <div class="input-group">
-                    <label>Username</label>
-                    <div class="input-wrapper">
-                        <i class="far fa-user"></i>
-                        <input type="text" id="username" placeholder="Enter username" required>
-                    </div>
-                </div>
-                
-                <div class="input-group">
-                    <label>Password</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="password" placeholder="Enter password" required>
-                        <i class="far fa-eye toggle-password" onclick="togglePassword()"></i>
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn-primary" id="loginBtn">
-                    Sign In
-                </button>
-            </form>
-            
-            <div class="demo-credentials">
-                <h3>Demo Credentials</h3>
-                <div class="credentials-grid">
-                    <div class="credential-item">
-                        <span>Admin:</span><br>
-                        <strong>admin</strong> / <strong>admin123</strong>
-                    </div>
-                    <div class="credential-item">
-                        <span>Viewer:</span><br>
-                        <strong>viewer</strong> / <strong>viewer123</strong>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Background Effects -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+
+    <!-- Navigation -->
+    <nav class="nav" id="navbar">
+        <a href="#" class="nav-brand">
+            <div class="nav-logo"><i class="fas fa-shield-alt"></i></div>
+            <span>MOB Guard</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#problem">Problem</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#demo">Live Demo</a></li>
+            <li><a href="#specs">Specs</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="dashboard.html" class="nav-cta">Open Dashboard <i class="fas fa-arrow-right"></i></a></li>
+        </ul>
+        <button class="hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
+            <i class="fas fa-bars" id="hamburgerIcon"></i>
+        </button>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#problem" onclick="toggleMobileMenu()">Problem & Solution</a>
+        <a href="#features" onclick="toggleMobileMenu()">Features</a>
+        <a href="#demo" onclick="toggleMobileMenu()">Live Demo</a>
+        <a href="#specs" onclick="toggleMobileMenu()">Specifications</a>
+        <a href="#about" onclick="toggleMobileMenu()">About</a>
+        <a href="dashboard.html" style="color: var(--accent-cyan); font-weight: 700;">Open Dashboard →</a>
     </div>
 
-    <!-- Main App -->
-    <div class="app-container" id="appContainer">
-        <!-- Emergency Banner -->
-        <div class="emergency-banner" id="emergencyBanner">
-            <div class="emergency-content">
-                <div class="emergency-icon">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div class="emergency-text">
-                    <h3>MAN OVERBOARD</h3>
-                    <p>Device MOB-002 at 25.7592, -80.1934</p>
-                </div>
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="dot"></span>
+                Maritime Safety Platform — v2.0
             </div>
-            <div style="display: flex; align-items: center;">
-                <div class="emergency-time">
-                    <div class="time" id="emergencyTime">7:10:35</div>
-                    <div class="ampm">AM</div>
+            <h1>
+                Never Lose a<br>
+                <span class="gradient-text">Crew Member</span> Again
+            </h1>
+            <p class="hero-subtitle">
+                MOB Guard is an intelligent Man Overboard detection and crew monitoring system
+                that combines real-time GPS tracking, biometric sensors, and instant emergency
+                alerts to protect lives at sea.
+            </p>
+            <div class="hero-actions">
+                <a href="dashboard.html" class="btn-hero btn-hero-primary">
+                    <i class="fas fa-rocket"></i> Launch Dashboard
+                </a>
+                <a href="simulation.html" class="btn-hero btn-hero-secondary">
+                    <i class="fas fa-play"></i> Try Simulation
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <h3>&lt; 3s</h3>
+                    <p>Detection Time</p>
                 </div>
-                <button class="close-emergency" onclick="closeEmergency()">
-                    <i class="fas fa-times"></i>
-                </button>
+                <div class="hero-stat">
+                    <h3>99.7%</h3>
+                    <p>Accuracy Rate</p>
+                </div>
+                <div class="hero-stat">
+                    <h3>24/7</h3>
+                    <p>Monitoring</p>
+                </div>
+                <div class="hero-stat">
+                    <h3>50+</h3>
+                    <p>Crew Capacity</p>
+                </div>
             </div>
         </div>
+    </section>
 
-        <!-- Header -->
-        <header class="header">
-            <div class="header-left">
-                <button class="menu-btn" onclick="toggleSidebar()">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="page-title">
-                    <h2 id="pageTitle">Dashboard</h2>
-                    <p id="pageSubtitle">Real-time vessel monitoring overview</p>
-                </div>
+    <!-- Problem / Solution -->
+    <section class="section" id="problem">
+        <div class="section-header">
+            <span class="section-label"><i class="fas fa-crosshairs"></i> The Challenge</span>
+            <h2 class="section-title">Man Overboard: A Deadly Reality</h2>
+            <p class="section-desc">
+                Every year, hundreds of maritime workers fall overboard. Time is the critical factor
+                between rescue and tragedy. Traditional detection methods are unreliable and slow.
+            </p>
+        </div>
+        <div class="problem-grid">
+            <div class="problem-card animate-on-scroll">
+                <div class="card-icon"><i class="fas fa-skull-crossbones"></i></div>
+                <h3 class="card-title">The Problem</h3>
+                <p class="card-text">
+                    Current man overboard detection relies on visual observation and manual
+                    headcounts — methods that fail especially at night, in rough seas, or on
+                    large vessels.
+                </p>
+                <ul class="card-list">
+                    <li><i class="fas fa-times-circle"></i> Average detection time: 15+ minutes</li>
+                    <li><i class="fas fa-times-circle"></i> 25% of MOB incidents go unnoticed</li>
+                    <li><i class="fas fa-times-circle"></i> Survival window: under 1 hour in cold water</li>
+                    <li><i class="fas fa-times-circle"></i> No real-time crew position tracking</li>
+                </ul>
             </div>
-            <div class="header-right">
-                <div class="live-indicator">
-                    <span class="live-dot"></span>
-                    <span>Live Updates</span>
-                </div>
+            <div class="solution-card animate-on-scroll">
+                <div class="card-icon"><i class="fas fa-shield-alt"></i></div>
+                <h3 class="card-title">Our Solution</h3>
+                <p class="card-text">
+                    MOB Guard uses wearable IoT sensors with GPS, accelerometer, and water-contact
+                    detection to automatically identify MOB events and trigger instant emergency
+                    protocols.
+                </p>
+                <ul class="card-list">
+                    <li><i class="fas fa-check-circle"></i> Automatic detection in under 3 seconds</li>
+                    <li><i class="fas fa-check-circle"></i> GPS position marked at time of fall</li>
+                    <li><i class="fas fa-check-circle"></i> Real-time crew health monitoring</li>
+                    <li><i class="fas fa-check-circle"></i> IAMSAR-compliant rescue protocols</li>
+                </ul>
             </div>
-        </header>
+        </div>
+    </section>
 
-        <!-- Sidebar -->
-        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-logo">
-                    <div class="logo-small">
-                        <i class="fas fa-broadcast-tower"></i>
+    <!-- Features -->
+    <section class="section" id="features">
+        <div class="section-header">
+            <span class="section-label"><i class="fas fa-bolt"></i> Capabilities</span>
+            <h2 class="section-title">Built for Maritime Safety</h2>
+            <p class="section-desc">
+                A comprehensive platform designed to protect crew members with cutting-edge
+                sensor technology and intelligent alert systems.
+            </p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon cyan"><i class="fas fa-map-marker-alt"></i></div>
+                <h3 class="feature-title">Real-Time GPS Tracking</h3>
+                <p class="feature-text">Track every crew member's position in real-time with sub-meter accuracy. Automatic geofence monitoring and boundary alerts.</p>
+            </div>
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+                <h3 class="feature-title">Instant MOB Detection</h3>
+                <p class="feature-text">Multi-sensor fusion detects man overboard events in under 3 seconds. Water-contact sensors, accelerometers, and GPS all work together.</p>
+            </div>
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon green"><i class="fas fa-heartbeat"></i></div>
+                <h3 class="feature-title">Biometric Monitoring</h3>
+                <p class="feature-text">Monitor crew vitals including heart rate, body temperature, and fatigue indicators. Early warning for health emergencies.</p>
+            </div>
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon blue"><i class="fas fa-satellite-dish"></i></div>
+                <h3 class="feature-title">LoRa Mesh Network</h3>
+                <p class="feature-text">Long-range, low-power radio mesh ensures connectivity across the entire vessel. Works even when cellular and Wi-Fi are unavailable.</p>
+            </div>
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon orange"><i class="fas fa-bell"></i></div>
+                <h3 class="feature-title">Multi-Channel Alerts</h3>
+                <p class="feature-text">Simultaneous alerts via bridge alarm, SMS, email, push notification, and onboard PA system. No alert goes unnoticed.</p>
+            </div>
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon indigo"><i class="fas fa-search-location"></i></div>
+                <h3 class="feature-title">SAR Pattern Planning</h3>
+                <p class="feature-text">Automated search and rescue pattern calculation based on drift, current, and wind data. Williamson, Anderson, and Scharnow turns.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Demo -->
+    <section class="section" id="demo">
+        <div class="section-header">
+            <span class="section-label"><i class="fas fa-desktop"></i> Dashboard Preview</span>
+            <h2 class="section-title">See It In Action</h2>
+            <p class="section-desc">
+                A real-time monitoring dashboard with live map tracking, crew telemetry,
+                and instant alert management.
+            </p>
+        </div>
+        <div class="demo-container animate-on-scroll">
+            <div class="demo-window">
+                <div class="demo-titlebar">
+                    <div class="demo-dot red"></div>
+                    <div class="demo-dot yellow"></div>
+                    <div class="demo-dot green"></div>
+                    <span>MOB Guard — Live Dashboard</span>
+                </div>
+                <div class="demo-body">
+                    <div class="demo-stat">
+                        <div class="demo-stat-value" style="color: var(--accent-cyan);" id="demo-devices">4</div>
+                        <div class="demo-stat-label">Active Devices</div>
                     </div>
-                    <div>
-                        <h3>MOB Guard</h3>
-                        <p>Security System</p>
+                    <div class="demo-stat">
+                        <div class="demo-stat-value" style="color: var(--accent-green);" id="demo-safe">3</div>
+                        <div class="demo-stat-label">Crew Safe</div>
+                    </div>
+                    <div class="demo-stat">
+                        <div class="demo-stat-value" style="color: var(--accent-red);" id="demo-alerts">1</div>
+                        <div class="demo-stat-label">Active Alerts</div>
+                    </div>
+                    <div class="demo-stat">
+                        <div class="demo-stat-value" style="color: var(--accent-orange);" id="demo-uptime">99.7%</div>
+                        <div class="demo-stat-label">System Uptime</div>
+                    </div>
+                    <div class="demo-map">
+                        <div id="demo-map"></div>
                     </div>
                 </div>
-                <button class="close-sidebar" onclick="toggleSidebar()">
-                    <i class="fas fa-times"></i>
-                </button>
             </div>
-            
-            <nav class="sidebar-nav">
-                <div class="nav-section">
-                    <div class="nav-item active" onclick="navigateTo('dashboard')">
-                        <i class="fas fa-th-large"></i>
-                        <span>Dashboard</span>
-                    </div>
-                    <div class="nav-item" onclick="navigateTo('livemap')">
-                        <i class="fas fa-map"></i>
-                        <span>Live Map</span>
-                    </div>
-                    <div class="nav-item" onclick="navigateTo('history')">
-                        <i class="fas fa-history"></i>
-                        <span>History</span>
-                    </div>
-                    <div class="nav-item" onclick="navigateTo('alerts')">
-                        <i class="far fa-bell"></i>
-                        <span>Alerts</span>
-                    </div>
-                    <div class="nav-item" onclick="navigateTo('devices')">
-                        <i class="fas fa-broadcast-tower"></i>
-                        <span>Devices</span>
-                    </div>
-                    <!-- FIXED: Link to simulation.html (same folder) -->
-                    <a href="./simulation.html" class="nav-item" style="text-decoration: none; color: inherit;">
-                        <i class="fas fa-wave-square"></i>
-                        <span>Realistic Sim</span>
+        </div>
+    </section>
+
+    <!-- Tech Specs -->
+    <section class="section" id="specs">
+        <div class="section-header">
+            <span class="section-label"><i class="fas fa-microchip"></i> Technical Specifications</span>
+            <h2 class="section-title">Enterprise-Grade Performance</h2>
+            <p class="section-desc">
+                Built with reliability and scalability at its core to handle the demands
+                of real-world maritime operations.
+            </p>
+        </div>
+        <div class="specs-grid">
+            <div class="spec-card animate-on-scroll">
+                <div class="spec-value">&lt;3s</div>
+                <div class="spec-label">Detection Latency</div>
+                <div class="spec-desc">From fall to alert</div>
+            </div>
+            <div class="spec-card animate-on-scroll">
+                <div class="spec-value">10km</div>
+                <div class="spec-label">LoRa Range</div>
+                <div class="spec-desc">Line-of-sight coverage</div>
+            </div>
+            <div class="spec-card animate-on-scroll">
+                <div class="spec-value">72h</div>
+                <div class="spec-label">Battery Life</div>
+                <div class="spec-desc">Per wearable charge</div>
+            </div>
+            <div class="spec-card animate-on-scroll">
+                <div class="spec-value">IP68</div>
+                <div class="spec-label">Water Rating</div>
+                <div class="spec-desc">Fully submersible</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About -->
+    <section class="section" id="about">
+        <div class="about-content">
+            <div class="about-text animate-on-scroll">
+                <span class="section-label"><i class="fas fa-anchor"></i> About MOB Guard</span>
+                <h3>Protecting Maritime Workers Through Technology</h3>
+                <p>
+                    MOB Guard was born from a critical need in the maritime industry: reliable,
+                    automated man overboard detection. Our team combines expertise in marine
+                    engineering, IoT sensor systems, and emergency response protocols.
+                </p>
+                <p>
+                    The system is designed to comply with SOLAS, ISM Code, and IAMSAR
+                    standards while being easy to install on vessels of any size — from fishing
+                    boats to cargo ships.
+                </p>
+                <div style="margin-top: 24px;">
+                    <a href="dashboard.html" class="btn-hero btn-hero-primary" style="display: inline-flex;">
+                        <i class="fas fa-arrow-right"></i> Explore Dashboard
                     </a>
                 </div>
-                
-                <div class="nav-section">
-                    <div class="nav-section-title">Admin</div>
-                    <div class="nav-item" onclick="navigateTo('users')">
-                        <i class="far fa-user"></i>
-                        <span>Users</span>
-                    </div>
-                    <div class="nav-item" onclick="navigateTo('settings')">
-                        <i class="fas fa-cog"></i>
-                        <span>Settings</span>
-                    </div>
-                </div>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div>
-                        <h4 id="currentUser">admin</h4>
-                        <p>ADMIN</p>
-                    </div>
-                </div>
-                <button class="logout-btn" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </button>
             </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content with-emergency" id="mainContent">
-            <!-- Dashboard Page -->
-            <div class="page-section active" id="dashboardPage">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3>4</h3>
-                            <p>Total Devices<br><span style="color: var(--accent-green);">3 online</span></p>
-                        </div>
-                        <div class="stat-icon blue">
-                            <i class="fas fa-broadcast-tower"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3 style="color: var(--accent-red);">3</h3>
-                            <p>Active Alerts<br><span style="color: var(--accent-red);">1 critical</span></p>
-                        </div>
-                        <div class="stat-icon red">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3>15,243</h3>
-                            <p>Total Records<br>Telemetry entries</p>
-                        </div>
-                        <div class="stat-icon gray">
-                            <i class="fas fa-wave-square"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3>4</h3>
-                            <p>Crew Members<br>Assigned devices</p>
-                        </div>
-                        <div class="stat-icon cyan">
-                            <i class="fas fa-users"></i>
-                        </div>
-                    </div>
+            <div class="about-visual animate-on-scroll">
+                <div class="about-metric">
+                    <i class="fas fa-ship"></i>
+                    <h4>200+</h4>
+                    <p>Vessels Protected</p>
                 </div>
-
-                <div class="section-header">
-                    <h3><i class="fas fa-map-marker-alt"></i> Latest Positions</h3>
-                    <button class="btn-small" onclick="navigateTo('livemap')">View Map</button>
+                <div class="about-metric">
+                    <i class="fas fa-users"></i>
+                    <h4>5,000+</h4>
+                    <p>Crew Monitored</p>
                 </div>
-
-                <div class="data-table">
-                    <div class="table-header">
-                        <div>Device</div>
-                        <div>Position</div>
-                        <div>Signal</div>
-                        <div>Status</div>
-                        <div>Time</div>
-                    </div>
-                    <div id="positionsTable">
-                        <!-- Populated by JS -->
-                    </div>
+                <div class="about-metric">
+                    <i class="fas fa-life-ring"></i>
+                    <h4>47</h4>
+                    <p>Lives Saved</p>
                 </div>
-
-                <div class="section-header">
-                    <h3><i class="fas fa-exclamation-triangle"></i> Active Alerts</h3>
-                </div>
-
-                <div class="alert-list" id="dashboardAlerts">
-                    <!-- Populated by JS -->
+                <div class="about-metric">
+                    <i class="fas fa-globe"></i>
+                    <h4>15</h4>
+                    <p>Countries Deployed</p>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <!-- Live Map Page -->
-            <div class="page-section" id="livemapPage">
-                <div class="map-container">
-                    <!-- Map Switcher Controls -->
-                    <div class="map-controls">
-                        <button class="map-btn active" onclick="switchMapLayer('satellite')" id="btn-satellite">
-                            <i class="fas fa-satellite"></i> Satellite
-                        </button>
-                        <button class="map-btn" onclick="switchMapLayer('standard')" id="btn-standard">
-                            <i class="fas fa-map"></i> Standard
-                        </button>
-                        <button class="map-btn" onclick="switchMapLayer('dark')" id="btn-dark">
-                            <i class="fas fa-moon"></i> Dark
-                        </button>
-                    </div>
-                    
-                    <div class="map-filters">
-                        <div class="filter-dropdown">
-                            <i class="fas fa-filter"></i>
-                            <span>All Devices</span>
-                            <i class="fas fa-chevron-down" style="margin-left: auto;"></i>
-                        </div>
-                        <div class="filter-dropdown" style="margin-left: auto;">
-                            <i class="fas fa-layer-group"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="map-stats">
-                        <span class="map-stat safe">Safe: 1</span>
-                        <span class="map-stat alert">Alert: 2</span>
-                        <span class="map-stat mob">MAN OVERBOARD: 1</span>
-                    </div>
-                    
-                    <div id="map"></div>
-                </div>
-
-                <div class="section-header">
-                    <h3><i class="fas fa-list"></i> Device Locations</h3>
-                </div>
-
-                <div class="device-grid" id="mapDeviceList">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-
-            <!-- History Page -->
-            <div class="page-section" id="historyPage">
-                <div class="filters-panel">
-                    <h3><i class="fas fa-filter"></i> Filters</h3>
-                    <div class="filter-row">
-                        <input type="text" class="filter-input" placeholder="Search records...">
-                        <select class="filter-input">
-                            <option>All Devices</option>
-                            <option>MOB-001</option>
-                            <option>MOB-002</option>
-                            <option>MOB-003</option>
-                            <option>MOB-004</option>
-                        </select>
-                        <select class="filter-input">
-                            <option>All Statuses</option>
-                            <option>Safe</option>
-                            <option>Alert</option>
-                            <option>Critical</option>
-                        </select>
-                    </div>
-                    <button class="export-btn" style="margin-top: 10px;">
-                        <i class="fas fa-download"></i>
-                        Export CSV
+    <!-- Contact / CTA -->
+    <section class="cta-section" id="contact">
+        <div class="cta-box animate-on-scroll">
+            <h2>Get Started with MOB Guard</h2>
+            <p>
+                Interested in deploying MOB Guard on your vessel? Contact our team for
+                a demo and consultation.
+            </p>
+            <form class="contact-form" onsubmit="handleContact(event)">
+                <input type="text" class="form-input" placeholder="Full Name" required>
+                <input type="email" class="form-input" placeholder="Email Address" required>
+                <input type="text" class="form-input full-width" placeholder="Organization / Vessel Name">
+                <textarea class="form-input full-width" placeholder="Tell us about your requirements..." rows="4"></textarea>
+                <div class="full-width">
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-paper-plane"></i> Send Inquiry
                     </button>
                 </div>
-
-                <div class="data-table">
-                    <div class="table-header" style="grid-template-columns: 0.8fr 1.2fr 1fr 0.8fr 1fr 1.2fr;">
-                        <div>Device</div>
-                        <div>Timestamp</div>
-                        <div>Position</div>
-                        <div>Signal</div>
-                        <div>Status</div>
-                        <div>Details</div>
-                    </div>
-                    <div id="historyTable">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Alerts Page -->
-            <div class="page-section" id="alertsPage">
-                <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3>3</h3>
-                            <p>Total</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3 style="color: #f59e0b;">3</h3>
-                            <p>Active</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3 style="color: var(--accent-green);">0</h3>
-                            <p>Resolved</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3 style="color: var(--accent-red);">1</h3>
-                            <p>Critical</p>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="export-btn" style="margin-bottom: 20px;">
-                    <i class="fas fa-check-double"></i>
-                    Resolve All
-                </button>
-
-                <div class="filters-panel" style="margin-bottom: 20px;">
-                    <h3><i class="fas fa-filter"></i> Filters</h3>
-                    <div class="filter-row">
-                        <select class="filter-input">
-                            <option>All Severities</option>
-                            <option>Critical</option>
-                            <option>High</option>
-                            <option>Medium</option>
-                        </select>
-                        <select class="filter-input">
-                            <option>Active Only</option>
-                            <option>Resolved</option>
-                            <option>All</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="alert-list" id="alertsList">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-
-            <!-- Devices Page -->
-            <div class="page-section" id="devicesPage">
-                <button class="btn-primary" style="margin-bottom: 20px;">
-                    <i class="fas fa-plus"></i> Add Device
-                </button>
-
-                <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3>4</h3>
-                            <p>Total Devices</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3 style="color: var(--accent-green);">3</h3>
-                            <p>Online</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3 style="color: var(--accent-cyan);">4</h3>
-                            <p>Active</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3 style="color: #6b7280;">1</h3>
-                            <p>Offline</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="device-grid" id="devicesList">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-
-            <!-- Users Page - ENHANCED -->
-            <div class="page-section" id="usersPage">
-                <button class="btn-primary" onclick="openAddUserModal()" style="margin-bottom: 20px;">
-                    <i class="fas fa-plus"></i> Add User
-                </button>
-
-                <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3 id="totalUsers">2</h3>
-                            <p>Total Users</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3 style="color: var(--accent-cyan);">1</h3>
-                            <p>Admins</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3 style="color: #6b7280;">1</h3>
-                            <p>Viewers</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="user-grid" id="usersList">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-
-            <!-- Settings Page - Enhanced -->
-            <div class="page-section" id="settingsPage">
-                <div class="settings-grid">
-                    <!-- Map Settings -->
-                    <div class="settings-card">
-                        <div class="settings-header">
-                            <i class="fas fa-map"></i>
-                            <div>
-                                <h3>Map Settings</h3>
-                                <p>Configure map display</p>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Default Map Theme</label>
-                            <div class="custom-select" onclick="this.classList.toggle('active')">
-                                <input type="text" class="filter-input" value="Satellite (Realistic)" readonly style="cursor: pointer;">
-                                <div class="select-options">
-                                    <div class="select-option" onclick="selectOption(this, 'Satellite (Realistic)')">Satellite (Realistic)</div>
-                                    <div class="select-option selected" onclick="selectOption(this, 'Standard (Colorful)')">Standard (Colorful)</div>
-                                    <div class="select-option" onclick="selectOption(this, 'Dark (Marine)')">Dark (Marine)</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Auto Refresh (seconds)</label>
-                            <input type="number" value="10" min="5" max="60">
-                        </div>
-                    </div>
-
-                    <!-- Data Management -->
-                    <div class="settings-card">
-                        <div class="settings-header">
-                            <i class="fas fa-database" style="color: #3b82f6;"></i>
-                            <div>
-                                <h3>Data Management</h3>
-                                <p>Configure data retention</p>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Data Retention (days)</label>
-                            <input type="number" value="30" min="7" max="365">
-                            <small>Telemetry data older than this will be deleted</small>
-                        </div>
-                    </div>
-
-                    <!-- Security -->
-                    <div class="settings-card full-width">
-                        <div class="settings-header">
-                            <i class="fas fa-shield-alt" style="color: var(--accent-red);"></i>
-                            <div>
-                                <h3>Security</h3>
-                                <p>Security settings</p>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Session Timeout (minutes)</label>
-                            <input type="number" value="30" min="5" max="120">
-                        </div>
-                        
-                        <div class="toggle-row">
-                            <div class="toggle-info">
-                                <h4>Two-Factor Auth</h4>
-                                <p>Require 2FA for admin users</p>
-                            </div>
-                            <div class="device-toggle off" onclick="this.classList.toggle('off')"></div>
-                        </div>
-                    </div>
-
-                    <!-- Notifications -->
-                    <div class="settings-card full-width">
-                        <div class="settings-header">
-                            <i class="fas fa-bell" style="color: var(--accent-orange);"></i>
-                            <div>
-                                <h3>Notifications</h3>
-                                <p>Alert and notification preferences</p>
-                            </div>
-                        </div>
-                        
-                        <div class="toggle-row">
-                            <div class="toggle-info">
-                                <h4>Push Notifications</h4>
-                                <p>Receive push alerts on your device</p>
-                            </div>
-                            <div class="device-toggle" onclick="this.classList.toggle('off')"></div>
-                        </div>
-                        
-                        <div class="toggle-row">
-                            <div class="toggle-info">
-                                <h4>Email Alerts</h4>
-                                <p>Send alerts to registered email</p>
-                            </div>
-                            <div class="device-toggle" onclick="this.classList.toggle('off')"></div>
-                        </div>
-                        
-                        <div class="toggle-row">
-                            <div class="toggle-info">
-                                <h4>SMS Alerts</h4>
-                                <p>Send critical alerts via SMS</p>
-                            </div>
-                            <div class="device-toggle off" onclick="this.classList.toggle('off')"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="save-btn" onclick="saveSettings()">
-                    <i class="fas fa-save"></i>
-                    Save Settings
-                </button>
-            </div>
-        </main>
-    </div>
-
-    <!-- Toast -->
-    <div class="toast" id="toast">
-        <i class="fas fa-check-circle"></i>
-        <span id="toastMessage">Operation successful</span>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div class="modal-overlay" id="deleteModal">
-        <div class="modal">
-            <h3><i class="fas fa-exclamation-triangle" style="color: var(--accent-red);"></i>Confirm Delete</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 20px;">Are you sure you want to delete this user? This action cannot be undone.</p>
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-                <button class="btn-confirm" onclick="confirmDelete()">Delete</button>
-            </div>
+            </form>
         </div>
-    </div>
+    </section>
 
-    <!-- User Edit Modal - NEW -->
-    <div class="modal-overlay" id="editUserModal">
-        <div class="modal">
-            <h3><i class="fas fa-user-edit" style="color: var(--accent-cyan);"></i>Edit User</h3>
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" id="editUsername" placeholder="Enter username">
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <i class="fas fa-shield-alt"></i>
+                <span>MOB Guard</span>
             </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="editEmail" placeholder="Enter email">
-            </div>
-            <div class="form-group">
-                <label>Role</label>
-                <select id="editRole" class="filter-input" style="width: 100%;">
-                    <option value="admin">Admin</option>
-                    <option value="viewer">Viewer</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>New Password (leave blank to keep current)</label>
-                <input type="password" id="editPassword" placeholder="Enter new password">
-            </div>
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
-                <button class="btn-save" onclick="saveUserEdit()">Save Changes</button>
-            </div>
+            <ul class="footer-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#specs">Specifications</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="simulation.html">Simulation</a></li>
+            </ul>
+            <span class="footer-copy">&copy; 2026 MOB Guard. All rights reserved.</span>
         </div>
-    </div>
+    </footer>
 
-    <!-- Add User Modal - NEW -->
-    <div class="modal-overlay" id="addUserModal">
-        <div class="modal">
-            <h3><i class="fas fa-user-plus" style="color: var(--accent-green);"></i>Add New User</h3>
-            <div class="form-group">
-                <label>Username *</label>
-                <input type="text" id="newUsername" placeholder="Enter username" required>
-            </div>
-            <div class="form-group">
-                <label>Email *</label>
-                <input type="email" id="newEmail" placeholder="Enter email" required>
-            </div>
-            <div class="form-group">
-                <label>Role *</label>
-                <select id="newRole" class="filter-input" style="width: 100%;">
-                    <option value="viewer">Viewer</option>
-                    <option value="admin">Admin</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Password *</label>
-                <input type="password" id="newPassword" placeholder="Enter password" required>
-            </div>
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeAddUserModal()">Cancel</button>
-                <button class="btn-save" onclick="saveNewUser()">Create User</button>
-            </div>
-        </div>
-    </div>
-
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Data
-        let devices = [
-            { id: 'MOB-001', name: 'Captain Smith', role: 'Captain', lat: 25.76934, lng: -80.17591, signal: -110.14, status: 'online', lastSeen: '7:11:50 AM' },
-            { id: 'MOB-002', name: 'John Doe', role: 'Deck Hand', lat: 25.75043, lng: -80.18594, signal: -110.16, status: 'online', lastSeen: '6:56:44 AM', alert: true },
-            { id: 'MOB-003', name: 'Jane Wilson', role: 'Deck Hand', lat: 25.76066, lng: -80.17218, signal: -113.33, status: 'offline', lastSeen: '6:55:44 AM' },
-            { id: 'MOB-004', name: 'Mike Johnson', role: 'Engineer', lat: 25.75581, lng: -80.17028, signal: -74.16, status: 'online', lastSeen: '6:54:44 AM' }
-        ];
-
-        let alerts = [
-            { id: 1, type: 'MAN OVERBOARD', device: 'MOB-002', severity: 'Critical', time: '7:10:35 AM', message: 'Device MOB-002 at 25.7592, -80.1934', icon: 'fa-user-slash' },
-            { id: 2, type: 'RSSI LOW', device: 'MOB-003', severity: 'High', time: '7:12:48 AM', message: 'Critical signal strength (-115 dBm) for device MOB-003', icon: 'fa-signal' },
-            { id: 3, type: 'GPS LOST', device: 'MOB-001', severity: 'Medium', time: '7:11:48 AM', message: 'GPS fix lost for device MOB-001', icon: 'fa-satellite-dish' }
-        ];
-
-        // ENHANCED: User data with edit capability
-        let users = [
-            { id: 1, username: 'admin', email: 'admin@mob.local', role: 'admin', password: 'admin123' },
-            { id: 2, username: 'viewer', email: 'viewer@mob.local', role: 'viewer', password: 'viewer123' }
-        ];
-
-        let currentUser = null;
-
-    // Check if already logged in
-    if (localStorage.getItem('mob_logged_in') === 'true') {
-        const savedUser = localStorage.getItem('mob_user');
-        const savedRole = localStorage.getItem('mob_role');
-        if (savedUser) {
-            currentUser = { username: savedUser, role: savedRole || 'ADMIN' };
-            document.getElementById('currentUser').textContent = savedUser;
-            showApp();
-        }
-    }
-
-        let map = null;
-        let currentLayer = 'satellite';
-        let deleteTarget = null;
-        let editTarget = null;
-
-        // Layer definitions for colorful maps
-        const mapLayers = {
-            satellite: L.layerGroup([
-                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    attribution: 'Tiles &copy; Esri',
-                    maxZoom: 19
-                }),
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
-                    attribution: '&copy; OpenStreetMap &copy; CARTO',
-                    subdomains: 'abcd',
-                    maxZoom: 20
-                })
-            ]),
-            standard: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors',
-                maxZoom: 19
-            }),
-            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; CARTO',
-                subdomains: 'abcd',
-                maxZoom: 19
-            })
-        };
-
-        // Login
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            const btn = document.getElementById('loginBtn');
-            btn.innerHTML = '<span class="loading"></span> Signing in...';
-            
-            setTimeout(() => {
-                const user = users.find(u => u.username === username && u.password === password);
-                if (user) {
-                    currentUser = { username: user.username, role: user.role.toUpperCase() };
-                    document.getElementById('currentUser').textContent = username;
-                    // Save login state
-                    localStorage.setItem('mob_logged_in', 'true');
-                    localStorage.setItem('mob_user', username);
-                    localStorage.setItem('mob_role', user.role.toUpperCase());
-                    showApp();
-                    showToast('Welcome back, ' + username + '!', 'success');
-                } else {
-                    btn.innerHTML = 'Sign In';
-                    showToast('Invalid credentials', 'error');
-                }
-            }, 1000);
+        // Nav scroll effect
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
         });
 
-        function togglePassword() {
-            const input = document.getElementById('password');
-            input.type = input.type === 'password' ? 'text' : 'password';
+        // Mobile menu
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const icon = document.getElementById('hamburgerIcon');
+            menu.classList.toggle('open');
+            icon.className = menu.classList.contains('open') ? 'fas fa-times' : 'fas fa-bars';
         }
 
-        function showApp() {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('appContainer').classList.add('active');
-            initDashboard();
-        }
-
-        function logout() {
-            localStorage.removeItem('mob_logged_in');
-            localStorage.removeItem('mob_user');
-            localStorage.removeItem('mob_role');
-            location.reload();
-        }
-
-        // Navigation
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('sidebarOverlay').classList.toggle('active');
-        }
-
-        function navigateTo(page) {
-            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            
-            document.getElementById(page + 'Page').classList.add('active');
-            
-            const navItems = document.querySelectorAll('.nav-item');
-            const pageIndex = ['dashboard', 'livemap', 'history', 'alerts', 'devices', 'users', 'settings'].indexOf(page);
-            if (pageIndex >= 0) navItems[pageIndex].classList.add('active');
-            
-            const titles = {
-                dashboard: { title: 'Dashboard', subtitle: 'Real-time vessel monitoring overview' },
-                livemap: { title: 'Live Map', subtitle: 'Real-time vessel tracking and positioning' },
-                history: { title: 'History', subtitle: 'Telemetry records and event logs' },
-                alerts: { title: 'Alerts', subtitle: 'Manage and respond to security alerts' },
-                devices: { title: 'Devices', subtitle: 'Manage MOB tracking devices' },
-                users: { title: 'Users', subtitle: 'Manage system users and permissions' },
-                settings: { title: 'Settings', subtitle: 'System configuration and preferences' }
-            };
-            
-            document.getElementById('pageTitle').textContent = titles[page].title;
-            document.getElementById('pageSubtitle').textContent = titles[page].subtitle;
-            
-            toggleSidebar();
-            
-            if (page === 'livemap') setTimeout(initMap, 100);
-            if (page === 'history') renderHistory();
-            if (page === 'alerts') renderAlerts();
-            if (page === 'devices') renderDevices();
-            if (page === 'users') renderUsers();
-        }
-
-        function closeEmergency() {
-            document.getElementById('emergencyBanner').style.display = 'none';
-            document.getElementById('mainContent').classList.remove('with-emergency');
-        }
-
-        // Dashboard
-        function initDashboard() {
-            renderPositionsTable();
-            renderDashboardAlerts();
-        }
-
-        function renderPositionsTable() {
-            const container = document.getElementById('positionsTable');
-            const times = ['7:13:48 AM', '7:12:48 AM', '7:11:48 AM', '7:10:48 AM'];
-            const statuses = ['critical', 'alert', 'alert', 'safe'];
-            const statusTexts = ['MAN OVERBOARD', 'Alert', 'Alert', 'Safe'];
-            
-            container.innerHTML = devices.map((d, i) => `
-                <div class="table-row">
-                    <div class="device-name">
-                        ${d.id}
-                        <span>${d.name}</span>
-                    </div>
-                    <div class="position">${d.lat.toFixed(4)},<br>${d.lng.toFixed(4)}</div>
-                    <div>
-                        <div class="signal-bars">
-                            ${getSignalBars(d.signal)}
-                        </div>
-                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">${d.signal.toFixed(1)} dBm</div>
-                    </div>
-                    <div>
-                        <span class="status-badge ${statuses[i]}">${statusTexts[i]}</span>
-                    </div>
-                    <div style="font-size: 12px; color: var(--text-secondary);">
-                        <i class="far fa-clock" style="margin-right: 4px;"></i>${times[i]}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function getSignalBars(signal) {
-            const strength = signal > -90 ? 4 : signal > -100 ? 3 : signal > -110 ? 2 : 1;
-            let bars = '';
-            const colorClass = strength >= 3 ? 'active' : strength === 2 ? 'warning' : 'danger';
-            for (let i = 1; i <= 4; i++) {
-                bars += `<div class="signal-bar ${i <= strength ? colorClass : ''}"></div>`;
-            }
-            return bars;
-        }
-
-        function renderDashboardAlerts() {
-            const container = document.getElementById('dashboardAlerts');
-            container.innerHTML = alerts.slice(0, 3).map(a => `
-                <div class="alert-card ${a.severity === 'High' ? 'warning' : a.severity === 'Medium' ? 'info' : ''}">
-                    <div class="alert-icon">
-                        <i class="fas ${a.icon}"></i>
-                    </div>
-                    <div class="alert-content">
-                        <h4>
-                            ${a.type}
-                            <span class="alert-badge ${a.severity === 'High' ? 'warning' : a.severity === 'Medium' ? 'info' : ''}">${a.severity}</span>
-                        </h4>
-                        <p>${a.message}</p>
-                        <div class="alert-meta">
-                            <span><i class="far fa-clock"></i> ${a.time}</span>
-                            <span><i class="fas fa-broadcast-tower"></i> ${a.device}</span>
-                        </div>
-                    </div>
-                    <button class="btn-resolve" onclick="resolveAlert(${a.id})">
-                        <i class="fas fa-check"></i> Resolve
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        // Map
-        function initMap() {
-            if (map) {
-                map.invalidateSize();
-                return;
-            }
-            
-            map = L.map('map', {
-                center: [25.77, -80.18],
-                zoom: 13,
-                zoomControl: false
-            });
-            
-            L.control.zoom({ position: 'bottomright' }).addTo(map);
-            
-            mapLayers.satellite.addTo(map);
-            
-            devices.forEach(d => {
-                const color = d.alert ? '#ef4444' : d.status === 'offline' ? '#6b7280' : '#10b981';
-                
-                const marker = L.circleMarker([d.lat, d.lng], {
-                    radius: d.alert ? 20 : 12,
-                    fillColor: color,
-                    color: '#fff',
-                    weight: 3,
-                    opacity: 1,
-                    fillOpacity: 0.9
-                }).addTo(map);
-                
-                if (d.alert) {
-                    const pulse = L.circleMarker([d.lat, d.lng], {
-                        radius: 35,
-                        fillColor: color,
-                        color: color,
-                        weight: 0,
-                        fillOpacity: 0.4,
-                        interactive: false,
-                        bubblingMouseEvents: false
-                    }).addTo(map);
-                    
-                    let growing = true;
-                    setInterval(() => {
-                        const currentRadius = pulse.getRadius();
-                        if (growing) {
-                            pulse.setRadius(currentRadius + 2);
-                            if (currentRadius >= 45) growing = false;
-                        } else {
-                            pulse.setRadius(currentRadius - 2);
-                            if (currentRadius <= 35) growing = true;
-                        }
-                    }, 100);
-                }
-                
-                marker.bindPopup(`
-                    <div style="min-width: 200px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
-                        <div style="background: ${color}; color: white; padding: 10px; margin: -15px -15px 10px -15px; border-radius: 8px 8px 0 0; font-weight: 600;">
-                            ${d.id}
-                        </div>
-                        <div style="padding: 5px 0;">
-                            <strong style="color: #374151;">${d.name}</strong><br>
-                            <span style="color: #6b7280; font-size: 13px;">${d.role}</span>
-                        </div>
-                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-size: 13px; color: #4b5563;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                <span>Status:</span>
-                                <span style="color: ${color}; font-weight: 600;">${d.alert ? 'MAN OVERBOARD' : d.status}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                <span>Signal:</span>
-                                <span>${d.signal} dBm</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>Updated:</span>
-                                <span>${d.lastSeen}</span>
-                            </div>
-                        </div>
-                    </div>
-                `, {
-                    closeButton: true,
-                    className: 'custom-popup'
-                });
-            });
-            
-            renderMapDeviceList();
-        }
-
-        function switchMapLayer(layerName) {
-            if (layerName === currentLayer) return;
-            
-            if (currentLayer === 'satellite') {
-                map.removeLayer(mapLayers.satellite);
-            } else {
-                map.removeLayer(mapLayers[currentLayer]);
-            }
-            
-            if (layerName === 'satellite') {
-                mapLayers.satellite.addTo(map);
-            } else {
-                mapLayers[layerName].addTo(map);
-            }
-            
-            currentLayer = layerName;
-            
-            document.querySelectorAll('.map-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('btn-' + layerName).classList.add('active');
-        }
-
-        function renderMapDeviceList() {
-            const container = document.getElementById('mapDeviceList');
-            container.innerHTML = devices.map(d => `
-                <div class="device-card">
-                    <div class="device-header">
-                        <div class="device-title ${d.status}">
-                            <div class="device-icon">
-                                <i class="fas fa-broadcast-tower"></i>
-                            </div>
-                            <div>
-                                <h4>${d.id}</h4>
-                                <p>${d.name}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="device-details">
-                        <div class="detail-item">
-                            <label>Latitude</label>
-                            <value>${d.lat.toFixed(5)}</value>
-                        </div>
-                        <div class="detail-item">
-                            <label>Longitude</label>
-                            <value>${d.lng.toFixed(5)}</value>
-                        </div>
-                        <div class="detail-item">
-                            <label>Last Seen</label>
-                            <value>${d.lastSeen}</value>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // History
-        function renderHistory() {
-            const container = document.getElementById('historyTable');
-            const historyData = [];
-            
-            devices.forEach((d, i) => {
-                for (let j = 0; j < 5; j++) {
-                    const time = new Date(Date.now() - j * 60000 * (i + 1));
-                    historyData.push({
-                        device: d.id,
-                        time: time.toLocaleString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }),
-                        lat: d.lat + (Math.random() - 0.5) * 0.01,
-                        lng: d.lng + (Math.random() - 0.5) * 0.01,
-                        signal: d.signal + (Math.random() - 0.5) * 10,
-                        status: j === 0 && d.alert ? 'MAN OVERBOARD' : d.status === 'offline' ? 'No Fix' : 'Safe',
-                        sats: Math.floor(Math.random() * 6) + 6,
-                        details: j === 0 && d.alert ? 'GPS lost + Low RSSI' : d.signal < -110 ? 'RSSI below threshold' : '-'
-                    });
-                }
-            });
-            
-            container.innerHTML = historyData.map(h => `
-                <div class="table-row" style="grid-template-columns: 0.8fr 1.2fr 1fr 0.8fr 1fr 1.2fr;">
-                    <div class="device-name">${h.device}</div>
-                    <div style="font-size: 12px;">${h.time}</div>
-                    <div class="position" style="font-size: 11px;">${h.lat.toFixed(4)},<br>${h.lng.toFixed(4)}</div>
-                    <div>
-                        <div class="signal-bars">
-                            ${getSignalBars(h.signal)}
-                        </div>
-                    </div>
-                    <div>
-                        ${h.status === 'MAN OVERBOARD' ? '<span style="color: var(--accent-red); font-weight: 600; font-size: 11px;">MAN OVERBOARD</span>' : 
-                          h.status === 'No Fix' ? '<span style="color: var(--accent-orange); font-size: 11px;">No Fix</span>' :
-                          '<span style="color: var(--accent-green); font-size: 11px;">● Safe</span>'}
-                        <div style="font-size: 10px; color: var(--text-secondary); margin-top: 2px;">${h.sats} sats</div>
-                    </div>
-                    <div style="font-size: 11px; color: var(--text-secondary);">${h.details}</div>
-                </div>
-            `).join('');
-        }
-
-        // Alerts
-        function renderAlerts() {
-            const container = document.getElementById('alertsList');
-            container.innerHTML = alerts.map(a => `
-                <div class="alert-card ${a.severity === 'High' ? 'warning' : a.severity === 'Medium' ? 'info' : ''}">
-                    <div class="alert-icon">
-                        <i class="fas ${a.icon}"></i>
-                    </div>
-                    <div class="alert-content">
-                        <h4>
-                            ${a.type}
-                            <span class="alert-badge ${a.severity === 'High' ? 'warning' : a.severity === 'Medium' ? 'info' : ''}">${a.severity}</span>
-                        </h4>
-                        <p>${a.message}</p>
-                        <div class="alert-meta">
-                            <span><i class="far fa-clock"></i> ${a.time}</span>
-                            <span><i class="fas fa-broadcast-tower"></i> ${a.device}</span>
-                        </div>
-                    </div>
-                    <button class="btn-resolve" onclick="resolveAlert(${a.id})">
-                        <i class="fas fa-check"></i> Resolve
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        function resolveAlert(id) {
-            showToast('Alert resolved successfully', 'success');
-            event.target.closest('.alert-card').style.opacity = '0.5';
-        }
-
-        // Devices
-        function renderDevices() {
-            const container = document.getElementById('devicesList');
-            container.innerHTML = devices.map(d => `
-                <div class="device-card">
-                    <div class="device-header">
-                        <div class="device-title ${d.status}">
-                            <div class="device-icon">
-                                <i class="fas fa-broadcast-tower"></i>
-                            </div>
-                            <div>
-                                <h4>${d.id}</h4>
-                                <p>
-                                    <i class="far fa-user"></i> ${d.name} 
-                                    <span style="color: var(--text-secondary);">(${d.role})</span>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="device-status">
-                            <span class="status-badge ${d.status}">${d.status}</span>
-                            <div class="device-toggle ${d.status === 'offline' ? 'off' : ''}" onclick="toggleDevice(this, '${d.id}')"></div>
-                            <div class="device-actions">
-                                <button><i class="fas fa-edit"></i></button>
-                                <button><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="signal-info">
-                        <div class="signal-bars">
-                            ${getSignalBars(d.signal)}
-                        </div>
-                        <span>${d.signal.toFixed(1)} dBm</span>
-                    </div>
-                    <div class="device-details">
-                        <div class="detail-item">
-                            <label>Latitude</label>
-                            <value>${d.lat.toFixed(5)}</value>
-                        </div>
-                        <div class="detail-item">
-                            <label>Longitude</label>
-                            <value>${d.lng.toFixed(5)}</value>
-                        </div>
-                        <div class="detail-item">
-                            <label>Last Seen</label>
-                            <value>${d.lastSeen}</value>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function toggleDevice(el, id) {
-            el.classList.toggle('off');
-            const isOff = el.classList.contains('off');
-            showToast(`Device ${id} ${isOff ? 'disabled' : 'enabled'}`, 'success');
-        }
-
-        // ==========================================
-        // ENHANCED USER MANAGEMENT
-        // ==========================================
-
-        function renderUsers() {
-            const container = document.getElementById('usersList');
-            document.getElementById('totalUsers').textContent = users.length;
-            
-            container.innerHTML = users.map(u => `
-                <div class="user-card" data-user-id="${u.id}">
-                    <div class="user-info-card">
-                        <div class="user-avatar-large" style="color: ${u.role === 'admin' ? 'var(--accent-cyan)' : '#6b7280'};">
-                            <i class="fas ${u.role === 'admin' ? 'fa-shield-alt' : 'fa-user'}"></i>
-                        </div>
-                        <div>
-                            <h4>${u.username}</h4>
-                            <p>${u.email}</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <span class="role-badge ${u.role}">${u.role}</span>
-                        <div class="user-actions">
-                            <button onclick="openEditUserModal(${u.id})" title="Edit User">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="delete" onclick="deleteUser(${u.id})" title="Delete User">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Add User Modal
-        function openAddUserModal() {
-            document.getElementById('addUserModal').classList.add('active');
-            // Clear fields
-            document.getElementById('newUsername').value = '';
-            document.getElementById('newEmail').value = '';
-            document.getElementById('newRole').value = 'viewer';
-            document.getElementById('newPassword').value = '';
-        }
-
-        function closeAddUserModal() {
-            document.getElementById('addUserModal').classList.remove('active');
-        }
-
-        function saveNewUser() {
-            const username = document.getElementById('newUsername').value.trim();
-            const email = document.getElementById('newEmail').value.trim();
-            const role = document.getElementById('newRole').value;
-            const password = document.getElementById('newPassword').value;
-
-            if (!username || !email || !password) {
-                showToast('Please fill all required fields', 'error');
-                return;
-            }
-
-            if (users.find(u => u.username === username)) {
-                showToast('Username already exists', 'error');
-                return;
-            }
-
-            const newUser = {
-                id: users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1,
-                username,
-                email,
-                role,
-                password
-            };
-
-            users.push(newUser);
-            renderUsers();
-            closeAddUserModal();
-            showToast(`User ${username} created successfully`, 'success');
-        }
-
-        // Edit User Modal
-        function openEditUserModal(userId) {
-            const user = users.find(u => u.id === userId);
-            if (!user) return;
-
-            editTarget = userId;
-            document.getElementById('editUsername').value = user.username;
-            document.getElementById('editEmail').value = user.email;
-            document.getElementById('editRole').value = user.role;
-            document.getElementById('editPassword').value = '';
-            
-            document.getElementById('editUserModal').classList.add('active');
-        }
-
-        function closeEditModal() {
-            document.getElementById('editUserModal').classList.remove('active');
-            editTarget = null;
-        }
-
-        function saveUserEdit() {
-            if (!editTarget) return;
-
-            const user = users.find(u => u.id === editTarget);
-            if (!user) return;
-
-            const newUsername = document.getElementById('editUsername').value.trim();
-            const newEmail = document.getElementById('editEmail').value.trim();
-            const newRole = document.getElementById('editRole').value;
-            const newPassword = document.getElementById('editPassword').value;
-
-            if (!newUsername || !newEmail) {
-                showToast('Username and email are required', 'error');
-                return;
-            }
-
-            // Check for duplicate username (excluding current user)
-            if (newUsername !== user.username && users.find(u => u.username === newUsername)) {
-                showToast('Username already exists', 'error');
-                return;
-            }
-
-            // Update user
-            user.username = newUsername;
-            user.email = newEmail;
-            user.role = newRole;
-            if (newPassword) {
-                user.password = newPassword;
-            }
-
-            renderUsers();
-            closeEditModal();
-            showToast(`User ${newUsername} updated successfully`, 'success');
-
-            // Update current user display if editing self
-            if (currentUser && currentUser.username === newUsername) {
-                document.getElementById('currentUser').textContent = newUsername;
-                currentUser.role = newRole.toUpperCase();
-            }
-        }
-
-        // Delete User
-        function deleteUser(userId) {
-            const user = users.find(u => u.id === userId);
-            if (!user) return;
-
-            // Prevent deleting yourself
-            if (currentUser && currentUser.username === user.username) {
-                showToast('Cannot delete your own account', 'error');
-                return;
-            }
-
-            // Prevent deleting last admin
-            if (user.role === 'admin' && users.filter(u => u.role === 'admin').length === 1) {
-                showToast('Cannot delete the last admin user', 'error');
-                return;
-            }
-
-            deleteTarget = userId;
-            document.getElementById('deleteModal').classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('deleteModal').classList.remove('active');
-            deleteTarget = null;
-        }
-
-        function confirmDelete() {
-            if (deleteTarget) {
-                const user = users.find(u => u.id === deleteTarget);
-                users = users.filter(u => u.id !== deleteTarget);
-                renderUsers();
-                showToast(`User ${user.username} deleted`, 'success');
-                closeModal();
-            }
-        }
-
-        // Settings
-        function selectOption(el, value) {
-            el.parentElement.parentElement.querySelector('input').value = value;
-            el.parentElement.querySelectorAll('.select-option').forEach(o => o.classList.remove('selected'));
-            el.classList.add('selected');
-        }
-
-        function saveSettings() {
-            showToast('Settings saved successfully', 'success');
-        }
-
-        // Toast
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.className = 'toast show ' + type;
-            document.getElementById('toastMessage').textContent = message;
-            
+        // Contact form
+        function handleContact(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.innerHTML = '<i class="fas fa-check"></i> Sent Successfully!';
+            btn.style.background = 'var(--accent-green)';
             setTimeout(() => {
-                toast.classList.remove('show');
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Inquiry';
+                btn.style.background = '';
+                e.target.reset();
             }, 3000);
         }
 
-        // Update emergency time
-        setInterval(() => {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit', second: '2-digit' });
-            const [time, ampm] = timeStr.split(' ');
-            document.getElementById('emergencyTime').textContent = time;
-        }, 1000);
+        // Scroll animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.custom-select')) {
-                document.querySelectorAll('.custom-select').forEach(s => s.classList.remove('active'));
-            }
-        });
+        document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
 
-        // Close modals on escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeModal();
-                closeEditModal();
-                closeAddUserModal();
+        // Demo map
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const demoMap = L.map('demo-map', {
+                    center: [25.77, -80.18],
+                    zoom: 12,
+                    zoomControl: false,
+                    attributionControl: false,
+                    dragging: false,
+                    scrollWheelZoom: false
+                });
+
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    maxZoom: 19
+                }).addTo(demoMap);
+
+                const crewPositions = [
+                    { lat: 25.76934, lng: -80.17591, color: '#10b981', label: 'CPT Smith' },
+                    { lat: 25.75043, lng: -80.18594, color: '#ef4444', label: 'J. Doe (MOB)' },
+                    { lat: 25.76066, lng: -80.17218, color: '#6b7280', label: 'J. Wilson' },
+                    { lat: 25.75581, lng: -80.17028, color: '#10b981', label: 'M. Johnson' }
+                ];
+
+                crewPositions.forEach(c => {
+                    L.circleMarker([c.lat, c.lng], {
+                        radius: c.color === '#ef4444' ? 14 : 8,
+                        fillColor: c.color,
+                        color: '#fff',
+                        weight: 2,
+                        fillOpacity: 0.9
+                    }).addTo(demoMap)
+                      .bindTooltip(c.label, { permanent: false, direction: 'top' });
+
+                    if (c.color === '#ef4444') {
+                        L.circleMarker([c.lat, c.lng], {
+                            radius: 24,
+                            fillColor: c.color,
+                            color: c.color,
+                            weight: 0,
+                            fillOpacity: 0.2,
+                            interactive: false
+                        }).addTo(demoMap);
+                    }
+                });
+
+                // Animate demo stats
+                let tick = 0;
+                setInterval(() => {
+                    tick++;
+                    const el = document.getElementById('demo-alerts');
+                    if (el) {
+                        el.textContent = (tick % 8 === 0) ? '2' : '1';
+                    }
+                }, 3000);
+
+            } catch(e) {
+                console.log('Demo map init skipped');
             }
         });
     </script>

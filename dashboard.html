@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOB Guard — Dashboard</title>
+    <meta name="description" content="MOB Guard real-time crew monitoring dashboard. Track crew positions, biometrics, and manage safety alerts.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <!-- Login Page -->
+    <div class="login-container" id="loginPage">
+        <div class="login-bg-grid"></div>
+        <div class="login-box">
+            <div class="logo-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1>MOB Guard</h1>
+            <p>Man Overboard Security System</p>
+
+            <form id="loginForm">
+                <div class="input-group">
+                    <label>Username</label>
+                    <div class="input-wrapper">
+                        <i class="far fa-user"></i>
+                        <input type="text" id="username" placeholder="Enter username" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" placeholder="Enter password" required>
+                        <span class="toggle-password" onclick="App.togglePassword()">
+                            <i class="far fa-eye"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+            </form>
+
+            <div class="demo-credentials">
+                <h3>Demo Credentials</h3>
+                <div class="credentials-grid">
+                    <div class="credential-item">
+                        <span>Admin:</span><br>
+                        <strong>admin</strong> / <strong>admin123</strong>
+                    </div>
+                    <div class="credential-item">
+                        <span>Viewer:</span><br>
+                        <strong>viewer</strong> / <strong>viewer123</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-container" id="appContainer">
+        <!-- Emergency Banner -->
+        <div class="emergency-banner" id="emergencyBanner">
+            <div class="emergency-content">
+                <div class="emergency-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="emergency-text">
+                    <h3>⚠ MAN OVERBOARD DETECTED</h3>
+                    <p>Device MOB-002 · John Doe · Water contact confirmed</p>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div class="emergency-time">
+                    <div class="time" id="emergencyTime">--:--</div>
+                    <div class="ampm">ELAPSED</div>
+                </div>
+                <button class="close-emergency" onclick="App.closeEmergency()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-btn" onclick="App.toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="page-title">
+                    <h2 id="pageTitle">Dashboard</h2>
+                    <p id="pageSubtitle">Real-time vessel monitoring overview</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="live-indicator">
+                    <span class="live-dot"></span>
+                    <span>Live</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="App.toggleSidebar()"></div>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <div class="logo-small"><i class="fas fa-shield-alt"></i></div>
+                    <div>
+                        <h3>MOB Guard</h3>
+                        <p>Security System</p>
+                    </div>
+                </div>
+                <button class="close-sidebar" onclick="App.toggleSidebar()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-item active" onclick="App.navigateTo('dashboard')">
+                        <i class="fas fa-th-large"></i>
+                        <span>Dashboard</span>
+                    </div>
+                    <div class="nav-item" onclick="App.navigateTo('livemap')">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <span>Live Map</span>
+                    </div>
+                    <div class="nav-item" onclick="App.navigateTo('history')">
+                        <i class="fas fa-history"></i>
+                        <span>History</span>
+                    </div>
+                    <div class="nav-item" onclick="App.navigateTo('alerts')">
+                        <i class="fas fa-bell"></i>
+                        <span>Alerts</span>
+                    </div>
+                    <div class="nav-item" onclick="App.navigateTo('devices')">
+                        <i class="fas fa-broadcast-tower"></i>
+                        <span>Devices</span>
+                    </div>
+                    <a href="simulation.html" class="nav-item" style="text-decoration: none; color: inherit;">
+                        <i class="fas fa-wave-square"></i>
+                        <span>Simulation</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Admin</div>
+                    <div class="nav-item" onclick="App.navigateTo('users')">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Users</span>
+                    </div>
+                    <div class="nav-item" onclick="App.navigateTo('settings')">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </div>
+                </div>
+
+                <div class="nav-section" style="margin-top: auto;">
+                    <a href="index.html" class="nav-item" style="text-decoration: none; color: inherit;">
+                        <i class="fas fa-home"></i>
+                        <span>Landing Page</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar"><i class="fas fa-user"></i></div>
+                    <div>
+                        <h4 id="currentUser">admin</h4>
+                        <p>ADMIN</p>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="App.logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content with-emergency" id="mainContent">
+            <!-- Dashboard Page -->
+            <div class="page-section active" id="dashboardPage">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>4</h3>
+                            <p>Total Devices<br><span style="color: var(--accent-green);">3 online</span></p>
+                        </div>
+                        <div class="stat-icon blue"><i class="fas fa-broadcast-tower"></i></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3 style="color: var(--accent-red);">3</h3>
+                            <p>Active Alerts<br><span style="color: var(--accent-red);">1 critical</span></p>
+                        </div>
+                        <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>32</h3>
+                            <p>Telemetry Records<br>Data points</p>
+                        </div>
+                        <div class="stat-icon gray"><i class="fas fa-database"></i></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>4</h3>
+                            <p>Crew Members<br>Assigned devices</p>
+                        </div>
+                        <div class="stat-icon cyan"><i class="fas fa-users"></i></div>
+                    </div>
+                </div>
+
+                <!-- Crew Telemetry -->
+                <div class="section-header">
+                    <h3><i class="fas fa-heartbeat"></i> Crew Telemetry</h3>
+                </div>
+                <div class="crew-grid" id="crewTelemetry">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Positions Table -->
+                <div class="section-header">
+                    <h3><i class="fas fa-map-marker-alt"></i> Latest Positions</h3>
+                    <button class="btn-small" onclick="App.navigateTo('livemap')">View Map</button>
+                </div>
+                <div class="data-table">
+                    <div class="table-header">
+                        <div>Device</div>
+                        <div>Position</div>
+                        <div>Signal</div>
+                        <div>Status</div>
+                        <div>Time</div>
+                    </div>
+                    <div id="positionsTable">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Active Alerts -->
+                <div class="section-header">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Active Alerts</h3>
+                </div>
+                <div class="alert-list" id="dashboardAlerts">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Live Map Page -->
+            <div class="page-section" id="livemapPage">
+                <div class="map-container">
+                    <div class="map-controls">
+                        <button class="map-btn" onclick="MapManager.switchLayer('satellite')" id="btn-satellite">
+                            <i class="fas fa-satellite"></i> Satellite
+                        </button>
+                        <button class="map-btn" onclick="MapManager.switchLayer('standard')" id="btn-standard">
+                            <i class="fas fa-map"></i> Standard
+                        </button>
+                        <button class="map-btn active" onclick="MapManager.switchLayer('dark')" id="btn-dark">
+                            <i class="fas fa-moon"></i> Dark
+                        </button>
+                    </div>
+                    <div class="map-filters">
+                        <div class="filter-dropdown">
+                            <i class="fas fa-filter"></i>
+                            <span>All Devices</span>
+                        </div>
+                    </div>
+                    <div class="map-stats">
+                        <span class="map-stat safe">Safe: 2</span>
+                        <span class="map-stat alert">Alert: 1</span>
+                        <span class="map-stat mob">MOB: 1</span>
+                    </div>
+                    <div id="map"></div>
+                </div>
+
+                <div class="section-header">
+                    <h3><i class="fas fa-list"></i> Device Locations</h3>
+                </div>
+                <div class="device-grid" id="mapDeviceList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- History Page -->
+            <div class="page-section" id="historyPage">
+                <div class="filters-panel">
+                    <h3><i class="fas fa-filter"></i> Filters</h3>
+                    <div class="filter-row">
+                        <input type="text" class="filter-input" placeholder="Search records...">
+                        <select class="filter-input">
+                            <option>All Devices</option>
+                            <option>MOB-001</option>
+                            <option>MOB-002</option>
+                            <option>MOB-003</option>
+                            <option>MOB-004</option>
+                        </select>
+                        <select class="filter-input">
+                            <option>All Statuses</option>
+                            <option>Safe</option>
+                            <option>Alert</option>
+                            <option>MOB</option>
+                        </select>
+                    </div>
+                    <button class="export-btn" style="margin-top: 12px;">
+                        <i class="fas fa-download"></i> Export CSV
+                    </button>
+                </div>
+                <div class="data-table">
+                    <div class="table-header" style="grid-template-columns: 0.8fr 1.2fr 1fr 0.8fr 1fr 1.2fr;">
+                        <div>Device</div>
+                        <div>Timestamp</div>
+                        <div>Position</div>
+                        <div>Signal</div>
+                        <div>Status</div>
+                        <div>Details</div>
+                    </div>
+                    <div id="historyTable">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts Page -->
+            <div class="page-section" id="alertsPage">
+                <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="stat-card">
+                        <div class="stat-info"><h3>3</h3><p>Total</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info"><h3 style="color: var(--accent-orange);">3</h3><p>Active</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info"><h3 style="color: var(--accent-green);">0</h3><p>Resolved</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info"><h3 style="color: var(--accent-red);">1</h3><p>Critical</p></div>
+                    </div>
+                </div>
+                <div class="alert-list" id="alertsList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Devices Page -->
+            <div class="page-section" id="devicesPage">
+                <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="stat-card">
+                        <div class="stat-info"><h3>4</h3><p>Total Devices</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info"><h3 style="color: var(--accent-green);">3</h3><p>Online</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info"><h3 style="color: var(--accent-cyan);">4</h3><p>Active</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info"><h3 style="color: var(--text-muted);">1</h3><p>Offline</p></div>
+                    </div>
+                </div>
+                <div class="device-grid" id="devicesList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Users Page -->
+            <div class="page-section" id="usersPage">
+                <button class="btn-primary" onclick="App.openAddUserModal()" style="margin-bottom: 20px; width: auto; padding: 12px 24px;">
+                    <i class="fas fa-plus"></i> Add User
+                </button>
+                <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="stat-card">
+                        <div class="stat-info"><h3 id="totalUsers">2</h3><p>Total Users</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info"><h3 style="color: var(--accent-cyan);">1</h3><p>Admins</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info"><h3 style="color: var(--text-muted);">1</h3><p>Viewers</p></div>
+                    </div>
+                </div>
+                <div class="user-grid" id="usersList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div class="page-section" id="settingsPage">
+                <div class="settings-grid">
+                    <div class="settings-card">
+                        <div class="settings-header">
+                            <i class="fas fa-map"></i>
+                            <div><h3>Map Settings</h3><p>Configure map display</p></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Default Map Theme</label>
+                            <div class="custom-select" onclick="this.classList.toggle('active')">
+                                <input type="text" class="filter-input" value="Dark (Marine)" readonly style="cursor: pointer;">
+                                <div class="select-options">
+                                    <div class="select-option" onclick="App.selectOption(this, 'Satellite (Realistic)')">Satellite (Realistic)</div>
+                                    <div class="select-option" onclick="App.selectOption(this, 'Standard (Colorful)')">Standard (Colorful)</div>
+                                    <div class="select-option selected" onclick="App.selectOption(this, 'Dark (Marine)')">Dark (Marine)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Auto Refresh (seconds)</label>
+                            <input type="number" value="4" min="2" max="30">
+                            <small>How often telemetry data refreshes</small>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="settings-header">
+                            <i class="fas fa-database" style="color: var(--accent-blue);"></i>
+                            <div><h3>Data Management</h3><p>Configure data retention</p></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Data Retention (days)</label>
+                            <input type="number" value="30" min="7" max="365">
+                            <small>Telemetry data older than this will be archived</small>
+                        </div>
+                    </div>
+
+                    <div class="settings-card full-width">
+                        <div class="settings-header">
+                            <i class="fas fa-shield-alt" style="color: var(--accent-red);"></i>
+                            <div><h3>Security</h3><p>Authentication & access control</p></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Session Timeout (minutes)</label>
+                            <input type="number" value="30" min="5" max="120">
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <h4>Two-Factor Authentication</h4>
+                                <p>Require 2FA for admin users</p>
+                            </div>
+                            <div class="device-toggle off" onclick="this.classList.toggle('off')"></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card full-width">
+                        <div class="settings-header">
+                            <i class="fas fa-bell" style="color: var(--accent-orange);"></i>
+                            <div><h3>Notifications</h3><p>Alert and notification preferences</p></div>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <h4>Push Notifications</h4>
+                                <p>Receive push alerts on your device</p>
+                            </div>
+                            <div class="device-toggle" onclick="this.classList.toggle('off')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <h4>Email Alerts</h4>
+                                <p>Send alerts to registered email</p>
+                            </div>
+                            <div class="device-toggle" onclick="this.classList.toggle('off')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <h4>SMS Alerts (Critical)</h4>
+                                <p>Send MOB alerts via SMS</p>
+                            </div>
+                            <div class="device-toggle off" onclick="this.classList.toggle('off')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <h4>Audio Alarm</h4>
+                                <p>Play alarm sound on MOB detection</p>
+                            </div>
+                            <div class="device-toggle" onclick="this.classList.toggle('off')"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="save-btn" onclick="App.saveSettings()">
+                    <i class="fas fa-save"></i> Save Settings
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Operation successful</span>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <h3><i class="fas fa-exclamation-triangle" style="color: var(--accent-red);"></i> Confirm Delete</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Are you sure you want to delete this user? This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="App.closeModal()">Cancel</button>
+                <button class="btn-confirm" onclick="App.confirmDelete()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal-overlay" id="editUserModal">
+        <div class="modal">
+            <h3><i class="fas fa-user-edit" style="color: var(--accent-cyan);"></i> Edit User</h3>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="editUsername" placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="editEmail" placeholder="Enter email">
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select id="editRole" class="filter-input">
+                    <option value="admin">Admin</option>
+                    <option value="viewer">Viewer</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>New Password (leave blank to keep current)</label>
+                <input type="password" id="editPassword" placeholder="Enter new password">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="App.closeEditModal()">Cancel</button>
+                <button class="btn-save" onclick="App.saveUserEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal-overlay" id="addUserModal">
+        <div class="modal">
+            <h3><i class="fas fa-user-plus" style="color: var(--accent-green);"></i> Add New User</h3>
+            <div class="form-group">
+                <label>Username *</label>
+                <input type="text" id="newUsername" placeholder="Enter username" required>
+            </div>
+            <div class="form-group">
+                <label>Email *</label>
+                <input type="email" id="newEmail" placeholder="Enter email" required>
+            </div>
+            <div class="form-group">
+                <label>Role *</label>
+                <select id="newRole" class="filter-input">
+                    <option value="viewer">Viewer</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Password *</label>
+                <input type="password" id="newPassword" placeholder="Enter password" required>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="App.closeAddUserModal()">Cancel</button>
+                <button class="btn-save" onclick="App.saveNewUser()">Create User</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts (order matters: api first, then modules, then app controller) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/alerts.js"></script>
+    <script src="scripts/map.js"></script>
+    <script src="scripts/dashboard.js"></script>
+    <script src="scripts/app.js"></script>
+</body>
+</html>
