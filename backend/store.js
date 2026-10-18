@@ -20,14 +20,31 @@ function isoNow() {
   return new Date().toISOString();
 }
 
+/** Default vessel state — offshore Miami, matching the original demo area. */
+function defaultVessel() {
+  return { name: 'MV Meridian', lat: 25.7600, lng: -80.1780, headingDeg: 250, speedKnots: 12 };
+}
+
+/** Default deck offsets (meters, x=east, y=north) per device id. */
+function defaultDeckOffset(id) {
+  const map = {
+    'MOB-001': { xMeters: 12, yMeters: 6 },
+    'MOB-002': { xMeters: -18, yMeters: 22 },
+    'MOB-003': { xMeters: 6, yMeters: -28 },
+    'MOB-004': { xMeters: -10, yMeters: -12 },
+  };
+  return map[id] || { xMeters: 0, yMeters: 0 };
+}
+
 /** Seed data mirroring the original demo (scripts/api.js). */
 function seedState() {
   const now = isoNow();
+  const vessel = defaultVessel();
   const devices = [
-    { id: 'MOB-001', crewName: 'Captain Smith', role: 'Captain', status: 'online', battery: 94, lat: 25.76934, lng: -80.17591, signal: -75.4, heartRate: 72, bodyTemp: 36.8, motionScore: 12, waterContact: false, alert: false, lastSeen: now, createdAt: now },
-    { id: 'MOB-002', crewName: 'John Doe', role: 'Deck Hand', status: 'online', battery: 67, lat: 25.75043, lng: -80.18594, signal: -110.2, heartRate: 105, bodyTemp: 35.2, motionScore: 89, waterContact: true, alert: true, lastSeen: now, createdAt: now },
-    { id: 'MOB-003', crewName: 'Jane Wilson', role: 'Deck Hand', status: 'offline', battery: 12, lat: 25.76066, lng: -80.17218, signal: -113.3, heartRate: 0, bodyTemp: 0, motionScore: 0, waterContact: false, alert: false, lastSeen: new Date(Date.now() - 600000).toISOString(), createdAt: now },
-    { id: 'MOB-004', crewName: 'Mike Johnson', role: 'Engineer', status: 'online', battery: 88, lat: 25.75581, lng: -80.17028, signal: -74.2, heartRate: 68, bodyTemp: 36.6, motionScore: 15, waterContact: false, alert: false, lastSeen: now, createdAt: now },
+    { id: 'MOB-001', crewName: 'Captain Smith', role: 'Captain', status: 'online', battery: 94, lat: vessel.lat, lng: vessel.lng, signal: -75.4, heartRate: 72, bodyTemp: 36.8, motionScore: 12, waterContact: false, alert: false, deckOffset: defaultDeckOffset('MOB-001'), mobDrift: null, lastSeen: now, createdAt: now },
+    { id: 'MOB-002', crewName: 'John Doe', role: 'Deck Hand', status: 'online', battery: 67, lat: vessel.lat, lng: vessel.lng, signal: -110.2, heartRate: 105, bodyTemp: 35.2, motionScore: 89, waterContact: true, alert: true, deckOffset: defaultDeckOffset('MOB-002'), mobDrift: { dirDeg: 100, speedKnots: 0.6, startedAt: now }, lastSeen: now, createdAt: now },
+    { id: 'MOB-003', crewName: 'Jane Wilson', role: 'Deck Hand', status: 'offline', battery: 12, lat: vessel.lat, lng: vessel.lng, signal: -113.3, heartRate: 0, bodyTemp: 0, motionScore: 0, waterContact: false, alert: false, deckOffset: defaultDeckOffset('MOB-003'), mobDrift: null, lastSeen: new Date(Date.now() - 600000).toISOString(), createdAt: now },
+    { id: 'MOB-004', crewName: 'Mike Johnson', role: 'Engineer', status: 'online', battery: 88, lat: vessel.lat, lng: vessel.lng, signal: -74.2, heartRate: 68, bodyTemp: 36.6, motionScore: 15, waterContact: false, alert: false, deckOffset: defaultDeckOffset('MOB-004'), mobDrift: null, lastSeen: now, createdAt: now },
   ];
 
   const telemetry = [];
@@ -49,7 +66,8 @@ function seedState() {
   });
 
   return {
-    version: 1,
+    version: 2,
+    vessel,
     users: [
       { id: 1, username: 'admin', email: 'admin@mobguard.io', role: 'admin', passwordHash: bcrypt.hashSync('admin123', SALT_ROUNDS), createdAt: now },
       { id: 2, username: 'viewer', email: 'viewer@mobguard.io', role: 'viewer', passwordHash: bcrypt.hashSync('viewer123', SALT_ROUNDS), createdAt: now },
@@ -83,6 +101,12 @@ function createStore(dataFile) {
   }
   state.seq = state.seq || { alert: 1, user: 1 };
   state.contacts = state.contacts || [];
+  // Migration: v1 data files have no vessel / deck offsets.
+  if (!state.vessel) state.vessel = defaultVessel();
+  for (const d of state.devices || []) {
+    if (!d.deckOffset) d.deckOffset = defaultDeckOffset(d.id);
+    if (d.mobDrift === undefined) d.mobDrift = null;
+  }
 
   let timer = null;
   function persistNow() {
@@ -113,7 +137,7 @@ function createStore(dataFile) {
     while (state.devices.find((d) => d.id === `MOB-${String(n).padStart(3, '0')}`)) n++;
     return `MOB-${String(n).padStart(3, '0')}`;
   }
-  const DEVICE_FIELDS = ['crewName', 'role', 'status', 'battery', 'lat', 'lng', 'signal', 'heartRate', 'bodyTemp', 'motionScore', 'waterContact', 'alert'];
+  const DEVICE_FIELDS = ['crewName', 'role', 'status', 'battery', 'lat', 'lng', 'signal', 'heartRate', 'bodyTemp', 'motionScore', 'waterContact', 'alert', 'deckOffset', 'mobDrift'];
   function createDevice(data) {
     const now = isoNow();
     const device = {
@@ -130,6 +154,8 @@ function createStore(dataFile) {
       motionScore: data.motionScore || 0,
       waterContact: !!data.waterContact,
       alert: !!data.alert,
+      deckOffset: data.deckOffset || defaultDeckOffset(data.id || ''),
+      mobDrift: null,
       lastSeen: now,
       createdAt: now,
     };
@@ -146,6 +172,21 @@ function createStore(dataFile) {
     d.lastSeen = isoNow();
     saveSoon();
     return { ...d };
+  }
+
+  // ---------- vessel ----------
+  function getVessel() {
+    return { ...state.vessel };
+  }
+  function updateVessel(patch) {
+    const v = state.vessel;
+    if (patch.name !== undefined) v.name = patch.name;
+    if (patch.lat !== undefined) v.lat = patch.lat;
+    if (patch.lng !== undefined) v.lng = patch.lng;
+    if (patch.headingDeg !== undefined) v.headingDeg = patch.headingDeg;
+    if (patch.speedKnots !== undefined) v.speedKnots = patch.speedKnots;
+    saveSoon();
+    return { ...v };
   }
 
   // ---------- telemetry ----------
@@ -211,9 +252,10 @@ function createStore(dataFile) {
     a.active = false;
     a.resolvedAt = isoNow();
     // Clear the device-level MOB flag when a MAN OVERBOARD alert is resolved.
+    // The crew member is recovered: re-attach them to the vessel on next tick.
     if (a.type === 'MAN OVERBOARD') {
       const d = state.devices.find((x) => x.id === a.deviceId);
-      if (d) { d.alert = false; d.waterContact = false; }
+      if (d) { d.alert = false; d.waterContact = false; d.mobDrift = null; }
     }
     saveSoon();
     return { ...a };
@@ -273,6 +315,7 @@ function createStore(dataFile) {
 
   return {
     saveSoon, persistNow,
+    getVessel, updateVessel,
     listDevices, getDevice, createDevice, updateDevice,
     addTelemetry, listTelemetry, latestTelemetry,
     listAlerts, getAlert, activeAlert, createAlert, resolveAlert,

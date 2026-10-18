@@ -6,6 +6,10 @@
  * `/telemetry`) and a raw WebSocket endpoint at /ws/telemetry for
  * non-Socket.io clients, and returns the pieces the entrypoint needs.
  *
+ * Security: helmet headers (CSP disabled — the dashboard uses inline
+ * scripts/CDNs), strict CORS allowlist, and rate limiting on auth and API
+ * routes.
+ *
  * Keeping app construction separate from listening makes the app
  * testable (tests bind an ephemeral port).
  */
@@ -13,11 +17,14 @@ const http = require('http');
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { Server: SocketIOServer } = require('socket.io');
 const { WebSocketServer } = require('ws');
 
 const config = require('./config');
 const { createStore } = require('./store');
+const { getVesselTrack } = require('./sim');
 const { apiNotFound, errorHandler } = require('./middleware');
 const authRoutes = require('./routes/auth');
 const deviceRoutes = require('./routes/devices');
@@ -25,6 +32,12 @@ const telemetryRoutes = require('./routes/telemetry');
 const alertRoutes = require('./routes/alerts');
 const userRoutes = require('./routes/users');
 const contactRoutes = require('./routes/contact');
+const vesselRoutes = require('./routes/vessel');
+const weatherRoutes = require('./routes/weather');
+
+function corsOrigins() {
+  return config.corsOrigin === '*' ? '*' : config.corsOrigin.split(',').map((s) => s.trim()).filter(Boolean);
+}
 
 function snapshotPayload(store) {
   const devices = store.listDevices();
@@ -32,6 +45,7 @@ function snapshotPayload(store) {
   return {
     devices,
     alerts,
+    vessel: { ...store.getVessel(), geofenceRadiusM: config.geofenceRadiusM, track: getVesselTrack() },
     stats: {
       totalDevices: devices.length,
       onlineDevices: devices.filter((d) => d.status === 'online').length,
@@ -46,8 +60,41 @@ function createApp(options = {}) {
   const store = createStore(options.dataFile || config.dataFile);
   const app = express();
 
-  app.use(cors({ origin: config.corsOrigin === '*' ? '*' : config.corsOrigin.split(',') }));
+  // ---- Security headers ----
+  // CSP is disabled because the dashboard ships inline scripts and CDN
+  // assets (Leaflet, Font Awesome); the remaining helmet headers still apply.
+  app.use(helmet({ contentSecurityPolicy: false }));
+  app.set('trust proxy', 1);
+
+  // ---- CORS ----
+  if (config.corsOrigin === '*') {
+    console.warn('[mob-guard] WARNING: CORS_ORIGIN is "*". Restrict it in production via the CORS_ORIGIN env var.');
+  }
+  app.use(cors({ origin: corsOrigins() }));
   app.use(express.json({ limit: '1mb' }));
+
+  // ---- Rate limiting ----
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many authentication attempts, please try again later' },
+  });
+  const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests, please slow down' },
+  });
+  app.use('/api/auth', authLimiter);
+  // Auth routes have their own stricter limiter; exempt them here so the
+  // auth limiter's RateLimit-* headers (not the general ones) are sent.
+  app.use('/api', (req, res, next) => {
+    if (req.path.startsWith('/auth')) return next();
+    return apiLimiter(req, res, next);
+  });
 
   // ---- REST API ----
   app.get('/api/health', (req, res) => res.json({ ok: true, service: 'mob-guard', time: new Date().toISOString() }));
@@ -59,6 +106,8 @@ function createApp(options = {}) {
   app.use('/api/alerts', alertRoutes(store, (...a) => emit(...a)));
   app.use('/api/users', userRoutes(store));
   app.use('/api/contact', contactRoutes(store));
+  app.use('/api/vessel', vesselRoutes(store, getVesselTrack));
+  app.use('/api/weather', weatherRoutes());
   app.use('/api', apiNotFound);
 
   // ---- Static frontend (repo root: index.html, dashboard.html, ...) ----
@@ -75,7 +124,7 @@ function createApp(options = {}) {
 
   // ---- Socket.io real-time channel (namespace /telemetry) ----
   const io = new SocketIOServer(server, {
-    cors: { origin: config.corsOrigin === '*' ? '*' : config.corsOrigin.split(',') },
+    cors: { origin: corsOrigins() },
   });
   const telemetryNs = io.of('/telemetry');
   telemetryNs.on('connection', (socket) => {

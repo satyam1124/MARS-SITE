@@ -18,13 +18,19 @@ module.exports = function alertRoutes(store, emit) {
     const device = store.getDevice(deviceId);
     if (!device) return res.status(404).json({ error: 'Device not found' });
 
-    store.updateDevice(deviceId, { alert: true, waterContact: true, motionScore: 95 });
+    const vessel = store.getVessel();
+    store.updateDevice(deviceId, {
+      alert: true,
+      waterContact: true,
+      motionScore: 95,
+      mobDrift: { dirDeg: 100, speedKnots: 0.6, startedAt: new Date().toISOString() },
+    });
     const updated = store.getDevice(deviceId);
     const alert = store.createAlert({
       deviceId,
       type: 'MAN OVERBOARD',
       severity: 'Critical',
-      message: `Water contact + abnormal motion detected for ${deviceId} (${updated.crewName})`,
+      message: `Water contact + abnormal motion detected for ${deviceId} (${updated.crewName}) — vessel at ${vessel.lat.toFixed(5)}, ${vessel.lng.toFixed(5)}`,
     });
 
     const mobPayload = {
@@ -32,6 +38,9 @@ module.exports = function alertRoutes(store, emit) {
       crewName: updated.crewName,
       lat: updated.lat,
       lng: updated.lng,
+      vesselLat: vessel.lat,
+      vesselLng: vessel.lng,
+      mobDrift: updated.mobDrift,
       timestamp: new Date().toISOString(),
     };
     emit('mob', mobPayload);

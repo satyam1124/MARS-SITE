@@ -29,7 +29,7 @@ async function api(method, p, { body, token } = {}) {
   });
   let json = null;
   try { json = await res.json(); } catch (e) { /* non-JSON */ }
-  return { status: res.status, json };
+  return { status: res.status, json, headers: res.headers };
 }
 
 before(async () => {
@@ -195,4 +195,79 @@ test('unknown API route returns JSON 404', async () => {
   const { status, json } = await api('GET', '/nope');
   assert.equal(status, 404);
   assert.ok(json.error);
+});
+
+test('vessel GET returns state with geofence radius', async () => {
+  const { status, json } = await api('GET', '/vessel');
+  assert.equal(status, 200);
+  assert.ok(json.name);
+  assert.ok(Number.isFinite(json.lat) && Number.isFinite(json.lng));
+  assert.ok(Number.isFinite(json.headingDeg) && Number.isFinite(json.speedKnots));
+  assert.ok(Number.isFinite(json.geofenceRadiusM));
+});
+
+test('vessel PATCH is admin-only and validated', async () => {
+  const forbidden = await api('PATCH', '/vessel', { body: { headingDeg: 90 }, token: viewerToken });
+  assert.equal(forbidden.status, 403);
+  const badHeading = await api('PATCH', '/vessel', { body: { headingDeg: 400 }, token: adminToken });
+  assert.equal(badHeading.status, 400);
+  const badSpeed = await api('PATCH', '/vessel', { body: { speedKnots: -5 }, token: adminToken });
+  assert.equal(badSpeed.status, 400);
+  const empty = await api('PATCH', '/vessel', { body: {}, token: adminToken });
+  assert.equal(empty.status, 400);
+  const ok = await api('PATCH', '/vessel', { body: { headingDeg: 270, speedKnots: 10 }, token: adminToken });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.json.headingDeg, 270);
+  assert.equal(ok.json.speedKnots, 10);
+  const check = await api('GET', '/vessel');
+  assert.equal(check.json.headingDeg, 270);
+});
+
+test('device PATCH updates crew name and role', async () => {
+  const { status, json } = await api('PATCH', '/devices/MOB-001', {
+    body: { crewName: 'Captain Aurora', role: 'Master' },
+    token: viewerToken,
+  });
+  assert.equal(status, 200);
+  assert.equal(json.crewName, 'Captain Aurora');
+  assert.equal(json.role, 'Master');
+  const check = await api('GET', '/devices/MOB-001');
+  assert.equal(check.json.crewName, 'Captain Aurora');
+});
+
+test('weather validates coordinates', async () => {
+  const missing = await api('GET', '/weather');
+  assert.equal(missing.status, 400);
+  const badLat = await api('GET', '/weather?lat=200&lng=10');
+  assert.equal(badLat.status, 400);
+  const badLng = await api('GET', '/weather?lat=25&lng=999');
+  assert.equal(badLng.status, 400);
+  const notNum = await api('GET', '/weather?lat=abc&lng=10');
+  assert.equal(notNum.status, 400);
+});
+
+test('weather degrades gracefully when upstream is unreachable', async () => {
+  const realFetch = global.fetch;
+  // Fail only the upstream weather call; the test's own HTTP client
+  // (which also uses global.fetch) must keep working.
+  global.fetch = (url, opts) => {
+    if (String(url).includes('open-meteo.com')) throw new Error('network down');
+    return realFetch(url, opts);
+  };
+  try {
+    // Use fresh coordinates to avoid the 10-min cache.
+    const { status, json } = await api('GET', '/weather?lat=12.34&lng=-56.78');
+    assert.equal(status, 200);
+    assert.equal(json.unavailable, true);
+  } finally {
+    global.fetch = realFetch;
+  }
+});
+
+test('rate-limit headers are present on auth endpoints', async () => {
+  // Reuse the viewer login path without burning the auth budget:
+  // the login limiter allows 10 attempts per 15 min; the suite uses ~8.
+  const { status, headers } = await api('POST', '/auth/login', { body: { username: 'viewer', password: 'viewer123' } });
+  assert.equal(status, 200);
+  assert.ok(headers.get('ratelimit-limit'), 'expected ratelimit-limit header');
 });
