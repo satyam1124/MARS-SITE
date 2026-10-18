@@ -84,8 +84,17 @@ pinned: false
 ```
 
 Notes:
-- The JSON-file store (`backend/data.json`) persists on the Space's disk;
-  it auto-seeds on first boot. For production scale, swap `backend/store.js`
+- **Free-tier sleep:** on the free `cpu-basic` hardware, a Space goes to
+  sleep after 48 hours with no visitors and wakes automatically (about a
+  30-second cold start) when someone opens it — so "24/7" on the free tier
+  really means "always available on visit". Truly never-sleeping needs
+  upgraded (paid) hardware, or a small external pinger hitting the Space
+  URL regularly. While the backend is asleep, the dashboard gracefully
+  falls back to demo mode.
+- **Data persistence:** Hugging Face only persists the `/data` directory,
+  so `backend/data.json` resets to seed values whenever the Space rebuilds
+  or restarts — crew edits and alerts won't durably survive on the free
+  tier. Fine for a demo; for production scale, swap `backend/store.js`
   for the Postgres adapter sketched in `docs/backend-architecture.md`.
 - Set `CORS_ORIGIN` to your Space URL in production if you embed the
   dashboard elsewhere.
