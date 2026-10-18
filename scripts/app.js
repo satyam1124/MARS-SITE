@@ -186,8 +186,8 @@ const App = {
                         <i class="fas ${u.role === 'admin' ? 'fa-shield-alt' : 'fa-user'}"></i>
                     </div>
                     <div>
-                        <h4>${u.username}</h4>
-                        <p>${u.email}</p>
+                        <h4>${escapeHtml(u.username)}</h4>
+                        <p>${escapeHtml(u.email)}</p>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 15px;">
@@ -256,6 +256,66 @@ const App = {
     closeEditModal() {
         document.getElementById('editUserModal').classList.remove('active');
         this.editTarget = null;
+    },
+
+    // === Device / crew editing ===
+    openEditDeviceModal(deviceId) {
+        const device = MOBApi.devices.find(d => d.id === deviceId);
+        if (!device) return;
+        this.editDeviceTarget = deviceId;
+        document.getElementById('editDeviceName').value = device.name || '';
+        document.getElementById('editDeviceRole').value = device.role || '';
+        document.getElementById('editDeviceIdLabel').textContent = deviceId;
+        document.getElementById('editDeviceModal').classList.add('active');
+    },
+
+    closeEditDeviceModal() {
+        document.getElementById('editDeviceModal').classList.remove('active');
+        this.editDeviceTarget = null;
+    },
+
+    async saveDeviceEdit() {
+        const deviceId = this.editDeviceTarget;
+        if (!deviceId) return;
+        const name = document.getElementById('editDeviceName').value.trim();
+        const role = document.getElementById('editDeviceRole').value.trim();
+        if (!name) {
+            AlertSystem.showToast('Crew name is required', 'error');
+            return;
+        }
+        if (name.length > 80 || role.length > 50) {
+            AlertSystem.showToast('Name (80) / role (50) too long', 'error');
+            return;
+        }
+
+        const backend = (window.MOBBackend && window.MOBBackend.connected) ? window.MOBBackend : null;
+        try {
+            if (backend) {
+                const res = await backend.authedFetch('/api/devices/' + encodeURIComponent(deviceId), {
+                    method: 'PATCH',
+                    body: { crewName: name, role: role || 'Crew' }
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    AlertSystem.showToast(err.error || 'Failed to save device', 'error');
+                    return;
+                }
+                await backend.syncState();
+            } else {
+                // Demo mode: update the local mock directly.
+                const device = MOBApi.devices.find(d => d.id === deviceId);
+                if (device) {
+                    device.name = name;
+                    device.role = role || 'Crew';
+                    MOBApi._notifyListeners('update', MOBApi.getSnapshot());
+                }
+            }
+            this.closeEditDeviceModal();
+            DashboardView.renderDevices();
+            AlertSystem.showToast('Device ' + deviceId + ' updated', 'success');
+        } catch (e) {
+            AlertSystem.showToast('Failed to save device', 'error');
+        }
     },
 
     saveUserEdit() {

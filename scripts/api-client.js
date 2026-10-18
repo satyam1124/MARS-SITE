@@ -163,12 +163,16 @@
         try {
             var dr = await apiFetch('/api/devices');
             var ar = await apiFetch('/api/alerts?active=true');
+            var vr = await apiFetch('/api/vessel');
             if (!dr.ok) return false;
             var devices = await dr.json();
             replaceInPlace(MOBApi.devices, devices.map(toFrontendDevice));
             if (ar.ok) {
                 var alerts = await ar.json();
                 replaceInPlace(MOBApi.alerts, alerts.map(toFrontendAlert));
+            }
+            if (vr.ok) {
+                MOBApi.vessel = await vr.json();
             }
             MOBApi._notifyListeners('update', MOBApi.getSnapshot());
             return true;
@@ -209,6 +213,12 @@
             var socket = io(BASE + '/telemetry');
             socket.on('telemetry', applyTelemetry);
             socket.on('mob', applyMob);
+            socket.on('vessel', function (vessel) {
+                if (vessel) {
+                    MOBApi.vessel = vessel;
+                    MOBApi._notifyListeners('update', MOBApi.getSnapshot());
+                }
+            });
             socket.on('alert', function () { syncState(); });
             socket.on('alertResolved', function (alert) {
                 var local = MOBApi.alerts.find(function (a) { return a.id === alert.id; });
@@ -223,6 +233,7 @@
                 if (snap && snap.devices) {
                     replaceInPlace(MOBApi.devices, snap.devices.map(toFrontendDevice));
                     replaceInPlace(MOBApi.alerts, (snap.alerts || []).map(toFrontendAlert));
+                    if (snap.vessel) MOBApi.vessel = snap.vessel;
                     MOBApi._notifyListeners('update', MOBApi.getSnapshot());
                 }
             });

@@ -1,13 +1,30 @@
 // ===== MOB Guard Mock API Service =====
-// Simulates real-time telemetry data for crew monitoring
+// Simulates real-time telemetry data for crew monitoring (demo mode:
+// GitHub Pages / file:// with no backend).
+//
+// Vessel-centric physics: the vessel moves along its heading; crew devices
+// are pinned to the vessel (vessel position + deck offset ± 2 m jitter)
+// and NEVER drift independently. A MAN OVERBOARD device detaches and
+// drifts with current + leeway.
 
 const MOBApi = {
+    // Vessel state
+    vessel: {
+        name: 'MV Meridian',
+        lat: 25.7600,
+        lng: -80.1780,
+        headingDeg: 250,
+        speedKnots: 12,
+        geofenceRadiusM: 150
+    },
+    vesselTrack: [],
+
     // Crew/Device data store
     devices: [
-        { id: 'MOB-001', name: 'Captain Smith', role: 'Captain', lat: 25.76934, lng: -80.17591, signal: -75.4, status: 'online', battery: 94, heartRate: 72, bodyTemp: 36.8, motionScore: 12, waterContact: false, lastSeen: new Date() },
-        { id: 'MOB-002', name: 'John Doe', role: 'Deck Hand', lat: 25.75043, lng: -80.18594, signal: -110.2, status: 'online', battery: 67, heartRate: 105, bodyTemp: 35.2, motionScore: 89, waterContact: true, lastSeen: new Date(), alert: true },
-        { id: 'MOB-003', name: 'Jane Wilson', role: 'Deck Hand', lat: 25.76066, lng: -80.17218, signal: -113.3, status: 'offline', battery: 12, heartRate: 0, bodyTemp: 0, motionScore: 0, waterContact: false, lastSeen: new Date(Date.now() - 600000) },
-        { id: 'MOB-004', name: 'Mike Johnson', role: 'Engineer', lat: 25.75581, lng: -80.17028, signal: -74.2, status: 'online', battery: 88, heartRate: 68, bodyTemp: 36.6, motionScore: 15, waterContact: false, lastSeen: new Date() }
+        { id: 'MOB-001', name: 'Captain Smith', role: 'Captain', lat: 25.7600, lng: -80.1780, signal: -75.4, status: 'online', battery: 94, heartRate: 72, bodyTemp: 36.8, motionScore: 12, waterContact: false, lastSeen: new Date(), deckOffset: { xMeters: 12, yMeters: 6 }, mobDrift: null },
+        { id: 'MOB-002', name: 'John Doe', role: 'Deck Hand', lat: 25.7600, lng: -80.1780, signal: -110.2, status: 'online', battery: 67, heartRate: 105, bodyTemp: 35.2, motionScore: 89, waterContact: true, lastSeen: new Date(), alert: true, deckOffset: { xMeters: -18, yMeters: 22 }, mobDrift: { dirDeg: 100, speedKnots: 0.6 } },
+        { id: 'MOB-003', name: 'Jane Wilson', role: 'Deck Hand', lat: 25.7600, lng: -80.1780, signal: -113.3, status: 'offline', battery: 12, heartRate: 0, bodyTemp: 0, motionScore: 0, waterContact: false, lastSeen: new Date(Date.now() - 600000), deckOffset: { xMeters: 6, yMeters: -28 }, mobDrift: null },
+        { id: 'MOB-004', name: 'Mike Johnson', role: 'Engineer', lat: 25.7600, lng: -80.1780, signal: -74.2, status: 'online', battery: 88, heartRate: 68, bodyTemp: 36.6, motionScore: 15, waterContact: false, lastSeen: new Date(), deckOffset: { xMeters: -10, yMeters: -12 }, mobDrift: null }
     ],
 
     alerts: [
@@ -24,6 +41,14 @@ const MOBApi = {
     history: [],
     _listeners: [],
     _interval: null,
+
+    // Physics helpers (shared units with the backend sim)
+    _moveByMeters(lat, lng, distM, bearingDeg) {
+        const rad = (bearingDeg * Math.PI) / 180;
+        const dLat = (distM * Math.cos(rad)) / 111320;
+        const dLng = (distM * Math.sin(rad)) / (111320 * Math.cos((lat * Math.PI) / 180));
+        return [lat + dLat, lng + dLng];
+    },
 
     // Initialize timestamps
     init() {
@@ -42,34 +67,48 @@ const MOBApi = {
     },
 
     _tick() {
+        const dtSec = 4;
+
+        // 1. Move the vessel along its heading.
+        const vDistM = this.vessel.speedKnots * 0.514444 * dtSec;
+        const [vLat, vLng] = this._moveByMeters(this.vessel.lat, this.vessel.lng, vDistM, this.vessel.headingDeg);
+        this.vessel.lat = +vLat.toFixed(7);
+        this.vessel.lng = +vLng.toFixed(7);
+        this.vesselTrack.push({ lat: this.vessel.lat, lng: this.vessel.lng });
+        if (this.vesselTrack.length > 50) this.vesselTrack.shift();
+
+        // 2. Crew stay pinned to the vessel; MOB drifts away.
         this.devices.forEach(d => {
             if (d.status === 'offline') return;
 
-            // Simulate GPS drift
-            d.lat += (Math.random() - 0.5) * 0.0003;
-            d.lng += (Math.random() - 0.5) * 0.0003;
+            const isMob = d.alert && d.waterContact;
+            if (isMob) {
+                const drift = d.mobDrift || { dirDeg: 100, speedKnots: 0.6 };
+                const [la, ln] = this._moveByMeters(d.lat, d.lng, drift.speedKnots * 0.514444 * dtSec, drift.dirDeg);
+                d.lat = +la.toFixed(7);
+                d.lng = +ln.toFixed(7);
+                d.heartRate = Math.round(95 + Math.random() * 20);
+                d.motionScore = Math.round(80 + Math.random() * 20);
+                d.battery = Math.max(0, d.battery - 0.05);
+            } else {
+                const off = d.deckOffset || { xMeters: 0, yMeters: 0 };
+                const jx = (Math.random() - 0.5) * 4;
+                const jy = (Math.random() - 0.5) * 4;
+                d.lat = +(this.vessel.lat + (off.yMeters + jy) / 111320).toFixed(7);
+                d.lng = +(this.vessel.lng + (off.xMeters + jx) / (111320 * Math.cos((this.vessel.lat * Math.PI) / 180))).toFixed(7);
+                d.heartRate = Math.round(d.heartRate + (Math.random() - 0.5) * 4);
+                d.heartRate = Math.max(58, Math.min(95, d.heartRate));
+                d.motionScore = Math.round(5 + Math.random() * 25);
+                d.battery = Math.max(0, d.battery - 0.02);
+            }
 
             // Simulate signal fluctuation
             d.signal += (Math.random() - 0.5) * 3;
             d.signal = Math.max(-125, Math.min(-60, d.signal));
 
-            // Simulate heart rate
-            if (!d.alert) {
-                d.heartRate = Math.round(d.heartRate + (Math.random() - 0.5) * 4);
-                d.heartRate = Math.max(58, Math.min(95, d.heartRate));
-            } else {
-                d.heartRate = Math.round(95 + Math.random() * 20);
-            }
-
             // Simulate body temp
             d.bodyTemp = parseFloat((d.bodyTemp + (Math.random() - 0.5) * 0.1).toFixed(1));
             d.bodyTemp = Math.max(35.0, Math.min(37.5, d.bodyTemp));
-
-            // Motion score
-            d.motionScore = d.alert ? Math.round(80 + Math.random() * 20) : Math.round(5 + Math.random() * 25);
-
-            // Battery drain
-            d.battery = Math.max(0, d.battery - 0.02);
 
             d.lastSeen = new Date();
         });
@@ -91,6 +130,7 @@ const MOBApi = {
         return {
             devices: this.devices.map(d => ({ ...d })),
             alerts: this.alerts.filter(a => a.active),
+            vessel: { ...this.vessel, track: this.vesselTrack.map(p => ({ ...p })) },
             stats: {
                 totalDevices: this.devices.length,
                 onlineDevices: this.devices.filter(d => d.status === 'online').length,
@@ -111,6 +151,10 @@ const MOBApi = {
         const alert = this.alerts.find(a => a.id === id);
         if (alert) {
             alert.active = false;
+            if (alert.type === 'MAN OVERBOARD') {
+                const d = this.devices.find(x => x.id === alert.device);
+                if (d) { d.alert = false; d.waterContact = false; d.mobDrift = null; }
+            }
             this._notifyListeners('alertResolved', alert);
         }
         return alert;
@@ -123,6 +167,7 @@ const MOBApi = {
         device.alert = true;
         device.waterContact = true;
         device.motionScore = 95;
+        device.mobDrift = { dirDeg: 100, speedKnots: 0.6 };
 
         const alert = {
             id: Date.now(),

@@ -52,13 +52,13 @@ const AlertSystem = {
                 </div>
                 <div class="alert-content">
                     <h4>
-                        ${a.type}
-                        <span class="alert-badge ${a.severity === 'High' ? 'warning' : a.severity === 'Medium' ? 'info' : ''}">${a.severity}</span>
+                        ${escapeHtml(a.type)}
+                        <span class="alert-badge ${a.severity === 'High' ? 'warning' : a.severity === 'Medium' ? 'info' : ''}">${escapeHtml(a.severity)}</span>
                     </h4>
-                    <p>${a.message}</p>
+                    <p>${escapeHtml(a.message)}</p>
                     <div class="alert-meta">
                         <span><i class="far fa-clock"></i> ${MOBApi.formatTime(a.time)}</span>
-                        <span><i class="fas fa-broadcast-tower"></i> ${a.device}</span>
+                        <span><i class="fas fa-broadcast-tower"></i> ${escapeHtml(a.device)}</span>
                     </div>
                 </div>
                 <button class="btn-resolve" onclick="AlertSystem.resolveAlert(${a.id})">
@@ -94,14 +94,14 @@ const AlertSystem = {
                 </div>
                 <div class="alert-content">
                     <h4>
-                        ${a.type}
-                        <span class="alert-badge ${a.severity === 'High' ? 'warning' : a.severity === 'Medium' ? 'info' : ''}">${a.severity}</span>
+                        ${escapeHtml(a.type)}
+                        <span class="alert-badge ${a.severity === 'High' ? 'warning' : a.severity === 'Medium' ? 'info' : ''}">${escapeHtml(a.severity)}</span>
                         ${!a.active ? '<span style="font-size: 11px; color: var(--accent-green);">✓ Resolved</span>' : ''}
                     </h4>
-                    <p>${a.message}</p>
+                    <p>${escapeHtml(a.message)}</p>
                     <div class="alert-meta">
                         <span><i class="far fa-clock"></i> ${MOBApi.formatTime(a.time)}</span>
-                        <span><i class="fas fa-broadcast-tower"></i> ${a.device}</span>
+                        <span><i class="fas fa-broadcast-tower"></i> ${escapeHtml(a.device)}</span>
                     </div>
                 </div>
                 ${a.active ? `
