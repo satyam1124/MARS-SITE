@@ -356,17 +356,34 @@
             icon.className = menu.classList.contains('open') ? 'fas fa-times' : 'fas fa-bars';
         }
 
-        // Contact form
+        // Contact form — POSTs to the backend when available, otherwise demo mode
         function handleContact(e) {
             e.preventDefault();
-            const btn = e.target.querySelector('button');
-            btn.innerHTML = '<i class="fas fa-check"></i> Sent Successfully!';
-            btn.style.background = 'var(--accent-green)';
-            setTimeout(() => {
-                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Inquiry';
-                btn.style.background = '';
-                e.target.reset();
-            }, 3000);
+            const form = e.target;
+            const btn = form.querySelector('button');
+            const inputs = form.querySelectorAll('.form-input');
+            const payload = {
+                name: (inputs[0] && inputs[0].value || '').trim(),
+                email: (inputs[1] && inputs[1].value || '').trim(),
+                organization: (inputs[2] && inputs[2].value || '').trim(),
+                message: (inputs[3] && inputs[3].value || '').trim()
+            };
+            const done = (sent) => {
+                btn.innerHTML = sent
+                    ? '<i class="fas fa-check"></i> Sent Successfully!'
+                    : '<i class="fas fa-check"></i> Received (demo mode)';
+                btn.style.background = 'var(--accent-green)';
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Inquiry';
+                    btn.style.background = '';
+                    form.reset();
+                }, 3000);
+            };
+            fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(r => done(r.ok)).catch(() => done(false));
         }
 
         // Scroll animations

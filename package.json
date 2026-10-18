@@ -1,5 +1,1 @@
-{
-  "devDependencies": {
-    "puppeteer": "^24.40.0"
-  }
-}
+{"dependencies":{"bcryptjs":"^3.0.3","cors":"^2.8.5","dotenv":"^16.4.7","express":"^4.21.2","jsonwebtoken":"^9.0.2","socket.io":"^4.8.1","ws":"^8.18.0"},"description":"MOB Guard — man-overboard crew safety monitoring dashboard with a functional Node.js backend","devDependencies":{"puppeteer":"^24.40.0"},"main":"backend/server.js","name":"mob-guard","scripts":{"backend":"node backend/server.js","dev":"node --watch backend/server.js","start":"node backend/server.js","test":"node --test backend/tests/api.test.js"},"version":"2.0.0"}

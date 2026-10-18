@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Backend runtime state (auto-seeded on first run)
+backend/data.json
+
+# Local environment secrets
+backend/.env
+
+# OS / editor
+.DS_Store

@@ -568,8 +568,10 @@
         </div>
     </div>
 
-    <!-- Scripts (order matters: api first, then modules, then app controller) -->
+    <!-- Scripts (order matters: api-client first, then api, then modules, then app controller) -->
+    <!-- Set window.API_BASE before api-client.js to use a remote backend; same origin is the default. -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="scripts/api-client.js"></script>
     <script src="scripts/api.js"></script>
     <script src="scripts/alerts.js"></script>
     <script src="scripts/map.js"></script>
