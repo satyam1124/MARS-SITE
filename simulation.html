@@ -737,7 +737,8 @@
             <div class="control-group">
                 <label class="control-label">Map Type</label>
                 <select id="map-theme" onchange="MapManager.changeTheme(this.value)">
-                    <option value="satellite" selected>Satellite (Realistic)</option>
+                    <option value="ocean" selected>Ocean (Nautical)</option>
+                    <option value="satellite">Satellite (Realistic)</option>
                     <option value="standard">Standard (Colorful)</option>
                     <option value="nautical">Nautical Charts</option>
                 </select>
@@ -1845,6 +1846,15 @@
                 });
 
                 this.layers = {
+                    ocean: L.layerGroup([
+                        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', {
+                            attribution: 'Esri, GEBCO, NOAA, NGA, USGS',
+                            maxZoom: 19
+                        }),
+                        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}', {
+                            maxZoom: 19
+                        })
+                    ]),
                     satellite: L.layerGroup([
                         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                             attribution: 'Esri',
@@ -1868,7 +1878,7 @@
                     ])
                 };
 
-                this.layers.satellite.addTo(this.map);
+                this.layers.ocean.addTo(this.map);
                 L.control.zoom({ position: 'bottomright' }).addTo(this.map);
                 
                 const vesselIcon = L.divIcon({
@@ -1917,6 +1927,14 @@
                         icon.style.transition = 'transform 0.3s ease';
                     }
                 }
+            },
+
+            distanceToVesselM(member) {
+                const v = TelemetrySystem.vessel && TelemetrySystem.vessel.position;
+                if (!v || !member.position) return '--';
+                const dLatM = (member.position.lat - v.lat) * 111320;
+                const dLngM = (member.position.lon - v.lon) * 111320 * Math.cos((v.lat * Math.PI) / 180);
+                return Math.round(Math.hypot(dLatM, dLngM));
             },
 
             updateCrewMarker(member) {
@@ -1987,6 +2005,7 @@
                         </div>
                         <b>${member.name}</b> (${member.id})<br>
                         <span style="color: #ff3333; font-weight: bold;">${member.role}</span><br>
+                        <span style="color: #ffaa00;">Distance from vessel: ${this.distanceToVesselM(member)} m</span><br>
                         <hr style="border-color: #333; margin: 8px 0;">
                         <table style="width: 100%; font-size: 0.85rem;">
                             <tr><td>Heart Rate:</td><td style="text-align: right; color: ${member.biometrics.heartRate > 140 ? '#ff3333' : '#00ff88'};">${Math.round(member.biometrics.heartRate)} bpm</td></tr>
@@ -2105,6 +2124,58 @@
                 return confirm('MOB incident in progress! Are you sure you want to leave?');
             }
             return true;
+        }
+
+
+        // ===== Live marine weather strip (Open-Meteo, free, no key) =====
+        const SimWeather = {
+            timer: null,
+            start() {
+                this.update();
+                this.timer = setInterval(() => this.update(), 10 * 60 * 1000);
+            },
+            async update() {
+                const v = (typeof TelemetrySystem !== 'undefined' && TelemetrySystem.vessel)
+                    ? TelemetrySystem.vessel.position : null;
+                if (!v) return;
+                try {
+                    const q = `latitude=${v.lat.toFixed(3)}&longitude=${v.lon.toFixed(3)}&timezone=auto`;
+                    const [mRes, wRes] = await Promise.all([
+                        fetch('https://marine-api.open-meteo.com/v1/marine?' + q +
+                            '&current=wave_height,ocean_current_velocity'),
+                        fetch('https://api.open-meteo.com/v1/forecast?' + q +
+                            '&current=wind_speed_10m,wind_direction_10m')
+                    ]);
+                    if (!mRes.ok) throw new Error('weather unavailable');
+                    const mCur = ((await mRes.json()).current) || {};
+                    const wCur = wRes.ok ? (((await wRes.json()).current) || {}) : {};
+                    const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+                    const wdir = (wCur.wind_direction_10m !== undefined && wCur.wind_direction_10m !== null)
+                        ? dirs[Math.round(wCur.wind_direction_10m / 45) % 8] : '';
+                    const windKt = (wCur.wind_speed_10m !== undefined && wCur.wind_speed_10m !== null)
+                        ? (wCur.wind_speed_10m / 1.852).toFixed(0) : '--';
+                    const waveM = (mCur.wave_height !== undefined && mCur.wave_height !== null)
+                        ? mCur.wave_height.toFixed(1) : '--';
+                    // Marine API reports ocean current in km/h.
+                    const curKt = (mCur.ocean_current_velocity !== undefined && mCur.ocean_current_velocity !== null)
+                        ? Number(mCur.ocean_current_velocity).toFixed(1) : '--';
+                    const windEl = document.getElementById('wind-data');
+                    if (windEl) windEl.textContent = `Wind: ${windKt}kt ${wdir} (live)`;
+                    const envEl = document.querySelector('.env-data');
+                    if (envEl) {
+                        const divs = envEl.querySelectorAll(':scope > div');
+                        if (divs[0]) divs[0].textContent = `Current: ${curKt}kt`;
+                        if (divs[1]) divs[1].textContent = `Wave Height: ${waveM}m (live)`;
+                    }
+                } catch (e) {
+                    /* keep the static fallback values already in the HTML */
+                }
+            }
+        };
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => SimWeather.start());
+        } else {
+            SimWeather.start();
         }
 
         // FIXED: Toggle overlay minimize/maximize
