@@ -1506,3 +1506,32 @@ body {
     .main-content { padding: 84px 40px 40px; }
     .header { padding: 0 40px; }
 }
+
+/* ===== Marine redesign additions ===== */
+
+/* MOB pulse ring animation (map markers) */
+@keyframes mob-pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.35); opacity: 0.75; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Weather card */
+.weather-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+.weather-item {
+    background: rgba(56, 189, 248, 0.05);
+    border: 1px solid rgba(56, 189, 248, 0.15);
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+}
+.weather-icon { font-size: 22px; margin-bottom: 6px; }
+.weather-value { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+.weather-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Vessel badge on map stats */
+.map-stat .fa-ship { margin-right: 4px; }

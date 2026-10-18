@@ -218,6 +218,16 @@
                     </div>
                 </div>
 
+                <!-- Sea Conditions -->
+                <div class="section-header">
+                    <h3><i class="fas fa-water"></i> Sea Conditions <span style="font-size: 12px; color: var(--text-muted); font-weight: 400;">at vessel position</span></h3>
+                </div>
+                <div class="stat-card" style="margin-bottom: 20px;">
+                    <div id="weatherCard" style="width: 100%;">
+                        <div style="color: var(--text-muted); font-size: 13px;"><i class="fas fa-spinner fa-spin"></i> Loading sea conditions…</div>
+                    </div>
+                </div>
+
                 <!-- Crew Telemetry -->
                 <div class="section-header">
                     <h3><i class="fas fa-heartbeat"></i> Crew Telemetry</h3>
@@ -257,13 +267,13 @@
             <div class="page-section" id="livemapPage">
                 <div class="map-container">
                     <div class="map-controls">
+                        <button class="map-btn active" onclick="MapManager.switchLayer('ocean')" id="btn-ocean">
+                            <i class="fas fa-water"></i> Ocean
+                        </button>
                         <button class="map-btn" onclick="MapManager.switchLayer('satellite')" id="btn-satellite">
                             <i class="fas fa-satellite"></i> Satellite
                         </button>
-                        <button class="map-btn" onclick="MapManager.switchLayer('standard')" id="btn-standard">
-                            <i class="fas fa-map"></i> Standard
-                        </button>
-                        <button class="map-btn active" onclick="MapManager.switchLayer('dark')" id="btn-dark">
+                        <button class="map-btn" onclick="MapManager.switchLayer('dark')" id="btn-dark">
                             <i class="fas fa-moon"></i> Dark
                         </button>
                     </div>
@@ -568,9 +578,30 @@
         </div>
     </div>
 
-    <!-- Scripts (order matters: api-client first, then api, then modules, then app controller) -->
+    <!-- Edit Device Modal -->
+    <div class="modal-overlay" id="editDeviceModal">
+        <div class="modal">
+            <h3><i class="fas fa-broadcast-tower" style="color: var(--accent-cyan);"></i> Edit Crew Device</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 16px;">Device <strong id="editDeviceIdLabel"></strong></p>
+            <div class="form-group">
+                <label>Crew Name *</label>
+                <input type="text" id="editDeviceName" placeholder="Enter crew member name" maxlength="80">
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <input type="text" id="editDeviceRole" placeholder="e.g. Captain, Deck Hand" maxlength="50">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="App.closeEditDeviceModal()">Cancel</button>
+                <button class="btn-save" onclick="App.saveDeviceEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts (order matters: utils, api-client first, then api, then modules, then app controller) -->
     <!-- Set window.API_BASE before api-client.js to use a remote backend; same origin is the default. -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="scripts/utils.js"></script>
     <script src="scripts/api-client.js"></script>
     <script src="scripts/api.js"></script>
     <script src="scripts/alerts.js"></script>

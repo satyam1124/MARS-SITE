@@ -409,9 +409,15 @@
                     scrollWheelZoom: false
                 });
 
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                    maxZoom: 19
-                }).addTo(demoMap);
+                L.layerGroup([
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', {
+                        attribution: 'Esri, GEBCO, NOAA, NGA, USGS',
+                        maxZoom: 19
+                    }),
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}', {
+                        maxZoom: 19
+                    })
+                ]).addTo(demoMap);
 
                 const crewPositions = [
                     { lat: 25.76934, lng: -80.17591, color: '#10b981', label: 'CPT Smith' },
